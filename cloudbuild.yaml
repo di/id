@@ -1,0 +1,12 @@
+steps:
+  # Install dependencies
+  - name: python
+    entrypoint: python
+    args: ["-m", "pip", "install", ".", "--user"]
+
+  # Generate ambient GCP credentials
+  - name: python
+    entrypoint: python
+    args: ["-m", "id", "--audience", "throwaway"]
+    env:
+      - "GOOGLE_SERVICE_ACCOUNT_NAME=sigstore-python-test@projectsigstore.iam.gserviceaccount.com"
