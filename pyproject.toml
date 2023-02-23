@@ -8,9 +8,6 @@ dynamic = ["version"]
 description = "A tool for generating OIDC identities"
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [
-  { name = "Sigstore Authors", email = "sigstore-dev@googlegroups.com" }
-]
 classifiers = [
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3 :: Only",
