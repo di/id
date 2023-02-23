@@ -7,6 +7,6 @@ steps:
   # Generate ambient GCP credentials
   - name: python
     entrypoint: python
-    args: ["-m", "id", "--audience", "throwaway"]
+    args: ["-m", "id", "throwaway"]
     env:
       - "GOOGLE_SERVICE_ACCOUNT_NAME=sigstore-python-test@projectsigstore.iam.gserviceaccount.com"
