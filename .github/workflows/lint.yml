@@ -1,0 +1,74 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      # NOTE: We intentionally lint against our minimum supported Python.
+      - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
+        with:
+          python-version: "3.7"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: deps
+        run: make dev ID_EXTRA=lint
+
+      - name: lint
+        run: make lint
+
+  check-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      # NOTE: We intentionally check `--help` rendering against our minimum Python,
+      # since it changes slightly between Python versions.
+      - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
+        with:
+          python-version: "3.7"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: deps
+        run: make dev
+
+      - name: check-readme
+        run: make check-readme
+
+  licenses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      # adapted from Warehouse's bin/licenses
+      - run: |
+          for fn in $(find . -type f -name "*.py"); do
+            if [[ ! "$(head -5 $fn | grep "^ *\(#\|\*\|\/\/\) .* License\(d*\)")" ]]; then
+              echo "${fn} is missing a license"
+              exit 1
+            fi
+          done
+
+  all-lints-pass:
+    if: always()
+
+    needs:
+    - lint
+    - check-readme
+    - licenses
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: check lint jobs
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        with:
+          jobs: ${{ toJSON(needs) }}
