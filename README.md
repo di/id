@@ -49,9 +49,11 @@ optional arguments:
 
 For Python API usage, there is a single importable function, `detect_credential`:
 
+```pycon
 >>> from id import detect_credential
 >>> detect_credential(audience='something')
 '<OIDC token>'
+```
 
 This function requires an `audience` parameter, which is used when generating
 the OIDC token. This should be set to the intended audience for the token.
