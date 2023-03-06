@@ -9,7 +9,7 @@ id
 <!--- @end-badges@ --->
 
 `id` is a Python tool for generating OIDC identities. It can automatically
-detect and produce OIDC credential on an number of environments, including GitHub Actions
+detect and produce OIDC credentials on an number of environments, including GitHub Actions
 and Google Cloud.
 
 ## Installation
