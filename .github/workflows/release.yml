@@ -91,7 +91,7 @@ jobs:
       - name: Sign artifacts
         uses: sigstore/gh-action-sigstore-python@v1.2.1
         with:
-          inputs: ./build-packages/*.tar.gz ./build-packages/*.whl
+          inputs: ./built-packages/*.tar.gz ./built-packages/*.whl
           bundle-only: true
 
       - name: Upload artifacts to GitHub
