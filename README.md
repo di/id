@@ -63,7 +63,7 @@ the OIDC token. This should be set to the intended audience for the token.
 `id` currently supports ambient credential detection in the following environments:
 
 * [GitHub Actions](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
-* [Google Cloud]
+* Google Cloud
   * [Cloud Run](https://cloud.google.com/run/docs/securing/service-identity)
   * [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
   * [Compute Engine](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances)
