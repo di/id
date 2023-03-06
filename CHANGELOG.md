@@ -9,4 +9,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * Initial split from https://github.com/sigstore/sigstore-python
 
 <!--Release URLs -->
-[Unreleased]: https://github.com/di/sigstore-python/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/di/id/compare/v1.0.0...HEAD
