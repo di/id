@@ -10,10 +10,8 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 
 jobs:
   build:
-    name: Build and sign artifacts
+    name: Build artifacts
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
@@ -26,28 +24,10 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: deps
-        run: python -m pip install -U build sigstore
+        run: python -m pip install -U build
 
       - name: build
         run: python -m build
-
-      - name: sign
-        run: |
-          mkdir -p signing-artifacts
-
-          # Sign using the ambient OIDC identity
-          for dist in dist/*; do
-            dist_base="$(basename "${dist}")"
-
-            # NOTE: signing artifacts currently go in a separate directory,
-            # to avoid confusing the package uploader (which otherwise tries
-            # to upload them to PyPI and fails). Future versions of twine
-            # and the gh-action-pypi-publish action should support these artifacts.
-            python -m sigstore sign "${dist}" \
-              --output-signature signing-artifacts/"${dist_base}.sig" \
-              --output-certificate signing-artifacts/"${dist_base}.crt"
-
-          done
 
       - name: Generate hashes for provenance
         shell: bash
@@ -65,13 +45,6 @@ jobs:
           path: ./dist/
           if-no-files-found: warn
 
-      - name: Upload signing-artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        with:
-          name: signing-artifacts
-          path: signing-artifacts/
-          if-no-files-found: warn
-
   generate-provenance:
     needs: [build]
     name: Generate build provenance
@@ -83,7 +56,7 @@ jobs:
     # https://github.com/slsa-framework/slsa-github-generator#verification-of-provenance
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.5.0
     with:
-      attestation-name: provenance-sigstore-${{ github.event.release.tag_name }}.intoto.jsonl
+      attestation-name: provenance-id-${{ github.event.release.tag_name }}.intoto.jsonl
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       compile-generator: true # Workaround for https://github.com/slsa-framework/slsa-github-generator/issues/1163
       upload-assets: true
@@ -109,9 +82,17 @@ jobs:
     permissions:
       # Needed to upload release assets.
       contents: write
+      # Needed to sign release assets.
+      id-token: write
     steps:
       - name: Download artifacts directories # goes to current working directory
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+
+      - name: Sign artifacts
+        uses: sigstore/gh-action-sigstore-python@v1.2.1
+        with:
+          inputs: ./build-packages/*.tar.gz ./build-packages/*.whl
+          bundle-only: true
 
       - name: Upload artifacts to GitHub
         # Confusingly, this action also supports updating releases, not
@@ -119,7 +100,5 @@ jobs:
         # created the release that triggered the action.
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
-          # signing-artifacts/ contains the signatures and certificates.
           files: |
             built-packages/*
-            signing-artifacts/*
