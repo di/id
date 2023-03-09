@@ -18,6 +18,8 @@ Ambient OIDC credential detection.
 
 import logging
 import os
+import shutil
+import subprocess  # nosec B404
 from typing import Optional
 
 import requests
@@ -188,3 +190,55 @@ def detect_gcp(audience: str) -> Optional[str]:
 
         logger.debug("GCP: successfully requested OIDC token")
         return resp.text
+
+
+def detect_buildkite(audience: str) -> Optional[str]:
+    """
+    Detect and return a Buildkite ambient OIDC credential.
+
+    Returns `None` if the context is not a Buildkite environment.
+
+    Raises if the environment is Buildkite, but no Buildkite agent is found or
+    the agent encounters an error when generating an OIDC token.
+    """
+    logger.debug("Buildkite: looking for OIDC credentials")
+
+    if not os.getenv("BUILDKITE"):
+        logger.debug("Buildkite: environment doesn't look like BuildKite; giving up")
+        return None
+
+    # Check that the BuildKite agent executable exists in the `PATH`.
+    if shutil.which("buildkite-agent") is None:
+        raise AmbientCredentialError(
+            "BuildKite: could not find Buildkite agent in Buildkite environment"
+        )
+
+    # Now query the agent for a token.
+    #
+    # NOTE(alex): We're silencing `bandit` here. The reasoning for ignoring each
+    # test are as follows.
+    #
+    # B603: This is complaining about invoking an external executable. However,
+    # there doesn't seem to be any way to do this that satisfies `bandit` so I
+    # think we need to ignore this.
+    # More context at:
+    #   https://github.com/PyCQA/bandit/issues/333
+    #
+    # B607: This is complaining about invoking an external executable without
+    # providing an absolute path (we just refer to whatever `buildkite-agent`)
+    # is in the `PATH`. For a Buildkite agent, there's no guarantee where the
+    # `buildkite-agent` is installed so again, I don't think there's anything
+    # we can do about this.
+    process = subprocess.run(  # nosec B603, B607
+        ["buildkite-agent", "oidc", "request-token", "--audience", "sigstore"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    if process.returncode != 0:
+        raise AmbientCredentialError(
+            f"Buildkite: the BuildKite agent encountered an error: {process.stdout}"
+        )
+
+    return process.stdout.strip()
