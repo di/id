@@ -192,7 +192,7 @@ def detect_gcp(audience: str) -> Optional[str]:
         return resp.text
 
 
-def detect_buildkite() -> Optional[str]:
+def detect_buildkite(audience: str) -> Optional[str]:
     """
     Detect and return a Buildkite ambient OIDC credential.
 
