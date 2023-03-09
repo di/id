@@ -230,7 +230,7 @@ def detect_buildkite(audience: str) -> Optional[str]:
     # `buildkite-agent` is installed so again, I don't think there's anything
     # we can do about this.
     process = subprocess.run(  # nosec B603, B607
-        ["buildkite-agent", "oidc", "request-token", "--audience", "sigstore"],
+        ["buildkite-agent", "oidc", "request-token", "--audience", audience],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
