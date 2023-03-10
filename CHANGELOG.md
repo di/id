@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * Added support for Buildkite OIDC tokens
   ([#21](https://github.com/di/id/pull/21))
 
+* Added a `timeout` parameter to `detect_credential` to control the timeout for
+  any network requests ([#26](https://github.com/di/id/pull/26))
+
 ## [1.0.0]
 
 ### Added
