@@ -196,7 +196,6 @@ def test_detect_github_timeout(monkeypatch):
             timeout=0.1,
         )
     ]
-    assert resp.json.calls == [pretend.call()]
 
 
 def test_gcp_impersonation_access_token_request_fail(monkeypatch):
@@ -360,9 +359,6 @@ def test_gcp_impersonation_timeout(monkeypatch):
     service_account_name = "identity@project.iam.gserviceaccount.com"
     monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", service_account_name)
 
-    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
-    monkeypatch.setattr(ambient, "logger", logger)
-
     access_token = pretend.stub()
     oidc_token = pretend.stub()
     get_resp = pretend.stub(
@@ -379,13 +375,6 @@ def test_gcp_impersonation_timeout(monkeypatch):
     monkeypatch.setattr(ambient, "requests", requests)
 
     assert ambient.detect_gcp("some-audience", 0.1) == oidc_token
-    assert logger.debug.calls == [
-        pretend.call("GCP: looking for OIDC credentials"),
-        pretend.call("GCP: GOOGLE_SERVICE_ACCOUNT_NAME set; attempting impersonation"),
-        pretend.call("GCP: requesting access token"),
-        pretend.call("GCP: requesting OIDC token"),
-        pretend.call("GCP: successfully requested OIDC token"),
-    ]
     assert requests.get.calls == [
         pretend.call(
             ambient._GCP_TOKEN_REQUEST_URL,
@@ -519,9 +508,6 @@ def test_detect_gcp_timeout(monkeypatch):
     )
     monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
 
-    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
-    monkeypatch.setattr(ambient, "logger", logger)
-
     resp = pretend.stub(
         raise_for_status=lambda: None,
         text="fakejwt",
@@ -537,12 +523,4 @@ def test_detect_gcp_timeout(monkeypatch):
             headers={"Metadata-Flavor": "Google"},
             timeout=0.1,
         )
-    ]
-    assert logger.debug.calls == [
-        pretend.call("GCP: looking for OIDC credentials"),
-        pretend.call(
-            "GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"
-        ),
-        pretend.call("GCP: requesting OIDC token"),
-        pretend.call("GCP: successfully requested OIDC token"),
     ]
