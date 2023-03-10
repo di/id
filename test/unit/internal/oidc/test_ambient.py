@@ -16,19 +16,19 @@ import pretend
 import pytest
 from requests import HTTPError
 
-from id import detect_credential
+from id import DEFAULT_TIMEOUT, detect_credential
 from id._internal.oidc import ambient
 
 
 def test_detect_credential_none(monkeypatch):
-    detect_none = pretend.call_recorder(lambda audience: None)
+    detect_none = pretend.call_recorder(lambda audience, timeout: None)
     monkeypatch.setattr(ambient, "detect_github", detect_none)
     monkeypatch.setattr(ambient, "detect_gcp", detect_none)
     assert detect_credential("some-audience") is None
 
 
 def test_detect_credential(monkeypatch):
-    detect_github = pretend.call_recorder(lambda audience: "fakejwt")
+    detect_github = pretend.call_recorder(lambda audience, timeout: "fakejwt")
     monkeypatch.setattr(ambient, "detect_github", detect_github)
 
     assert detect_credential("some-audience") == "fakejwt"
@@ -105,6 +105,7 @@ def test_detect_github_request_fails(monkeypatch):
             "fakeurl",
             params={"audience": "some-audience"},
             headers={"Authorization": "bearer faketoken"},
+            timeout=DEFAULT_TIMEOUT,
         )
     ]
 
@@ -130,6 +131,7 @@ def test_detect_github_bad_payload(monkeypatch):
             "fakeurl",
             params={"audience": "some-audience"},
             headers={"Authorization": "bearer faketoken"},
+            timeout=DEFAULT_TIMEOUT,
         )
     ]
     assert resp.json.calls == [pretend.call()]
@@ -153,6 +155,7 @@ def test_detect_github(monkeypatch):
             "fakeurl",
             params={"audience": "some-audience"},
             headers={"Authorization": "bearer faketoken"},
+            timeout=DEFAULT_TIMEOUT,
         )
     ]
     assert resp.json.calls == [pretend.call()]
@@ -377,6 +380,7 @@ def test_detect_gcp_request_fails(monkeypatch):
             ambient._GCP_IDENTITY_REQUEST_URL,
             params={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=DEFAULT_TIMEOUT,
         )
     ]
 
@@ -405,6 +409,7 @@ def test_detect_gcp(monkeypatch, product_name):
             ambient._GCP_IDENTITY_REQUEST_URL,
             params={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=DEFAULT_TIMEOUT,
         )
     ]
     assert logger.debug.calls == [

@@ -49,7 +49,10 @@ class GitHubOidcPermissionCredentialError(AmbientCredentialError):
     pass
 
 
-def detect_credential(audience: str) -> Optional[str]:
+DEFAULT_TIMEOUT = 15
+
+
+def detect_credential(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]:
     """
     Try each ambient credential detector, returning the first one to succeed
     or `None` if all fail.
@@ -69,7 +72,7 @@ def detect_credential(audience: str) -> Optional[str]:
         detect_buildkite,
     ]
     for detector in detectors:
-        credential = detector(audience)
+        credential = detector(audience, timeout)
         if credential is not None:
             return credential
     return None

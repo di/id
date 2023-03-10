@@ -25,7 +25,11 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, StrictStr
 
-from ... import AmbientCredentialError, GitHubOidcPermissionCredentialError
+from ... import (
+    DEFAULT_TIMEOUT,
+    AmbientCredentialError,
+    GitHubOidcPermissionCredentialError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +49,7 @@ class _GitHubTokenPayload(BaseModel):
     value: StrictStr
 
 
-def detect_github(audience: str) -> Optional[str]:
+def detect_github(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]:
     """
     Detect and return a GitHub Actions ambient OIDC credential.
 
@@ -81,6 +85,7 @@ def detect_github(audience: str) -> Optional[str]:
         req_url,
         params={"audience": audience},
         headers={"Authorization": f"bearer {req_token}"},
+        timeout=timeout,
     )
     try:
         resp.raise_for_status()
@@ -99,7 +104,7 @@ def detect_github(audience: str) -> Optional[str]:
     return payload.value
 
 
-def detect_gcp(audience: str) -> Optional[str]:
+def detect_gcp(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]:
     """
     Detect an return a Google Cloud Platform ambient OIDC credential.
 
@@ -119,6 +124,7 @@ def detect_gcp(audience: str) -> Optional[str]:
             _GCP_TOKEN_REQUEST_URL,
             params={"scopes": "https://www.googleapis.com/auth/cloud-platform"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=timeout,
         )
         try:
             resp.raise_for_status()
@@ -138,6 +144,7 @@ def detect_gcp(audience: str) -> Optional[str]:
             headers={
                 "Authorization": f"Bearer {access_token}",
             },
+            timeout=timeout,
         )
 
         logger.debug("GCP: requesting OIDC token")
@@ -179,6 +186,7 @@ def detect_gcp(audience: str) -> Optional[str]:
             _GCP_IDENTITY_REQUEST_URL,
             params={"audience": audience, "format": "full"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=timeout,
         )
 
         try:
@@ -192,7 +200,7 @@ def detect_gcp(audience: str) -> Optional[str]:
         return resp.text
 
 
-def detect_buildkite(audience: str) -> Optional[str]:
+def detect_buildkite(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]:
     """
     Detect and return a Buildkite ambient OIDC credential.
 
