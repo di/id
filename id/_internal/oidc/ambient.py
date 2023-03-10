@@ -207,10 +207,10 @@ def detect_buildkite(audience: str) -> Optional[str]:
         logger.debug("Buildkite: environment doesn't look like BuildKite; giving up")
         return None
 
-    # Check that the BuildKite agent executable exists in the `PATH`.
+    # Check that the Buildkite agent executable exists in the `PATH`.
     if shutil.which("buildkite-agent") is None:
         raise AmbientCredentialError(
-            "BuildKite: could not find Buildkite agent in Buildkite environment"
+            "Buildkite: could not find Buildkite agent in Buildkite environment"
         )
 
     # Now query the agent for a token.
@@ -238,7 +238,7 @@ def detect_buildkite(audience: str) -> Optional[str]:
 
     if process.returncode != 0:
         raise AmbientCredentialError(
-            f"Buildkite: the BuildKite agent encountered an error: {process.stdout}"
+            f"Buildkite: the Buildkite agent encountered an error: {process.stdout}"
         )
 
     return process.stdout.strip()

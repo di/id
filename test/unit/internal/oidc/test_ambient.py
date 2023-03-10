@@ -24,6 +24,7 @@ def test_detect_credential_none(monkeypatch):
     detect_none = pretend.call_recorder(lambda audience: None)
     monkeypatch.setattr(ambient, "detect_github", detect_none)
     monkeypatch.setattr(ambient, "detect_gcp", detect_none)
+    monkeypatch.setattr(ambient, "detect_buildkite", detect_none)
     assert detect_credential("some-audience") is None
 
 
@@ -414,4 +415,88 @@ def test_detect_gcp(monkeypatch, product_name):
         ),
         pretend.call("GCP: requesting OIDC token"),
         pretend.call("GCP: successfully requested OIDC token"),
+    ]
+
+
+def test_buildkite_no_agent(monkeypatch):
+    monkeypatch.setenv("BUILDKITE", "true")
+
+    # Mock out the `which` call. We don't expect this to exist in the `PATH` but
+    # just in case someone is running these tests on a Buildkite host...
+    shutil = pretend.stub(which=pretend.call_recorder(lambda bin: None))
+    monkeypatch.setattr(ambient, "shutil", shutil)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"Buildkite: could not find Buildkite agent in Buildkite environment",
+    ):
+        ambient.detect_buildkite("some-audience")
+
+    assert shutil.which.calls == [pretend.call("buildkite-agent")]
+
+
+def test_buildkite_agent_error(monkeypatch):
+    monkeypatch.setenv("BUILDKITE", "true")
+
+    # Mock out the `which` call to show that we have a `buildkite-agent` in our `PATH`.
+    shutil = pretend.stub(
+        which=pretend.call_recorder(lambda bin: "/usr/bin/buildkite-agent")
+    )
+    monkeypatch.setattr(ambient, "shutil", shutil)
+
+    # Mock out `run` call to emulate getting a non-zero return code from the `buildkite-agent`.
+    resp = pretend.stub(
+        returncode=-1,
+        stdout="mock error message",
+    )
+    subprocess = pretend.stub(
+        run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None
+    )
+    monkeypatch.setattr(ambient, "subprocess", subprocess)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"Buildkite: the Buildkite agent encountered an error: mock error message",
+    ):
+        ambient.detect_buildkite("some-audience")
+
+    assert shutil.which.calls == [pretend.call("buildkite-agent")]
+    assert subprocess.run.calls == [
+        pretend.call(
+            ["buildkite-agent", "oidc", "request-token", "--audience", "some-audience"],
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+    ]
+
+
+def test_buildkite(monkeypatch):
+    monkeypatch.setenv("BUILDKITE", "true")
+
+    # Mock out the `which` call to show that we have a `buildkite-agent` in our `PATH`.
+    shutil = pretend.stub(
+        which=pretend.call_recorder(lambda bin: "/usr/bin/buildkite-agent")
+    )
+    monkeypatch.setattr(ambient, "shutil", shutil)
+
+    # Mock out `run` call to emulate getting a successful return code from the `buildkite-agent`.
+    resp = pretend.stub(
+        returncode=0,
+        stdout="fakejwt",
+    )
+    subprocess = pretend.stub(
+        run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None
+    )
+    monkeypatch.setattr(ambient, "subprocess", subprocess)
+
+    assert ambient.detect_buildkite("some-audience") == "fakejwt"
+    assert shutil.which.calls == [pretend.call("buildkite-agent")]
+    assert subprocess.run.calls == [
+        pretend.call(
+            ["buildkite-agent", "oidc", "request-token", "--audience", "some-audience"],
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
     ]
