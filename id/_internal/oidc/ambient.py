@@ -93,6 +93,8 @@ def detect_github(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[s
         raise AmbientCredentialError(
             f"GitHub: OIDC token request failed (code={resp.status_code})"
         ) from http_error
+    except requests.Timeout:
+        raise AmbientCredentialError("GitHub: OIDC token request timed out")
 
     try:
         body = resp.json()
@@ -132,6 +134,8 @@ def detect_gcp(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]
             raise AmbientCredentialError(
                 f"GCP: access token request failed (code={resp.status_code})"
             ) from http_error
+        except requests.Timeout:
+            raise AmbientCredentialError("GCP: access token request timed out")
 
         access_token = resp.json().get("access_token")
 
@@ -154,6 +158,8 @@ def detect_gcp(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]
             raise AmbientCredentialError(
                 f"GCP: OIDC token request failed (code={resp.status_code})"
             ) from http_error
+        except requests.Timeout:
+            raise AmbientCredentialError("GCP: OIDC token request timed out")
 
         oidc_token: str = resp.json().get("token")
 
@@ -195,6 +201,8 @@ def detect_gcp(audience: str, timeout: float = DEFAULT_TIMEOUT) -> Optional[str]
             raise AmbientCredentialError(
                 f"GCP: OIDC token request failed (code={resp.status_code})"
             ) from http_error
+        except requests.Timeout:
+            raise AmbientCredentialError("GCP: OIDC token request timed out")
 
         logger.debug("GCP: successfully requested OIDC token")
         return resp.text
