@@ -14,7 +14,7 @@
 
 import pretend
 import pytest
-from requests import HTTPError
+from requests import HTTPError, Timeout
 
 from id import detect_credential
 from id._internal.oidc import ambient
@@ -105,6 +105,35 @@ def test_detect_github_request_fails(monkeypatch):
             "fakeurl",
             params={"audience": "some-audience"},
             headers={"Authorization": "bearer faketoken"},
+            timeout=30,
+        )
+    ]
+
+
+def test_detect_github_request_timeout(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+
+    resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
+    requests = pretend.stub(
+        get=pretend.call_recorder(lambda url, **kw: resp),
+        HTTPError=HTTPError,
+        Timeout=Timeout,
+    )
+    monkeypatch.setattr(ambient, "requests", requests)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"GitHub: OIDC token request timed out",
+    ):
+        ambient.detect_github("some-audience")
+    assert requests.get.calls == [
+        pretend.call(
+            "fakeurl",
+            params={"audience": "some-audience"},
+            headers={"Authorization": "bearer faketoken"},
+            timeout=30,
         )
     ]
 
@@ -130,6 +159,7 @@ def test_detect_github_bad_payload(monkeypatch):
             "fakeurl",
             params={"audience": "some-audience"},
             headers={"Authorization": "bearer faketoken"},
+            timeout=30,
         )
     ]
     assert resp.json.calls == [pretend.call()]
@@ -153,6 +183,7 @@ def test_detect_github(monkeypatch):
             "fakeurl",
             params={"audience": "some-audience"},
             headers={"Authorization": "bearer faketoken"},
+            timeout=30,
         )
     ]
     assert resp.json.calls == [pretend.call()]
@@ -175,6 +206,35 @@ def test_gcp_impersonation_access_token_request_fail(monkeypatch):
     with pytest.raises(
         ambient.AmbientCredentialError,
         match=r"GCP: access token request failed \(code=999\)",
+    ):
+        ambient.detect_gcp("some-audience")
+
+    assert logger.debug.calls == [
+        pretend.call("GCP: looking for OIDC credentials"),
+        pretend.call("GCP: GOOGLE_SERVICE_ACCOUNT_NAME set; attempting impersonation"),
+        pretend.call("GCP: requesting access token"),
+    ]
+
+
+def test_gcp_impersonation_access_token_request_timeout(monkeypatch):
+    monkeypatch.setenv(
+        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
+    )
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
+    requests = pretend.stub(
+        get=pretend.call_recorder(lambda url, **kw: resp),
+        HTTPError=HTTPError,
+        Timeout=Timeout,
+    )
+    monkeypatch.setattr(ambient, "requests", requests)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"GCP: access token request timed out",
     ):
         ambient.detect_gcp("some-audience")
 
@@ -235,6 +295,41 @@ def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
     with pytest.raises(
         ambient.AmbientCredentialError,
         match=r"GCP: OIDC token request failed \(code=999\)",
+    ):
+        ambient.detect_gcp("some-audience")
+
+    assert logger.debug.calls == [
+        pretend.call("GCP: looking for OIDC credentials"),
+        pretend.call("GCP: GOOGLE_SERVICE_ACCOUNT_NAME set; attempting impersonation"),
+        pretend.call("GCP: requesting access token"),
+        pretend.call("GCP: requesting OIDC token"),
+    ]
+
+
+def test_gcp_impersonation_identity_token_request_timeout(monkeypatch):
+    monkeypatch.setenv(
+        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
+    )
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    access_token = pretend.stub()
+    get_resp = pretend.stub(
+        raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
+    )
+    post_resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
+    requests = pretend.stub(
+        get=pretend.call_recorder(lambda url, **kw: get_resp),
+        post=pretend.call_recorder(lambda url, **kw: post_resp),
+        HTTPError=HTTPError,
+        Timeout=Timeout,
+    )
+    monkeypatch.setattr(ambient, "requests", requests)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"GCP: OIDC token request timed out",
     ):
         ambient.detect_gcp("some-audience")
 
@@ -377,6 +472,37 @@ def test_detect_gcp_request_fails(monkeypatch):
             ambient._GCP_IDENTITY_REQUEST_URL,
             params={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=30,
+        )
+    ]
+
+
+def test_detect_gcp_request_timeout(monkeypatch):
+    stub_file = pretend.stub(
+        __enter__=lambda *a: pretend.stub(read=lambda: "Google"),
+        __exit__=lambda *a: None,
+    )
+    monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
+
+    resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
+    requests = pretend.stub(
+        get=pretend.call_recorder(lambda url, **kw: resp),
+        HTTPError=HTTPError,
+        Timeout=Timeout,
+    )
+    monkeypatch.setattr(ambient, "requests", requests)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"GCP: OIDC token request timed out",
+    ):
+        ambient.detect_gcp("some-audience")
+    assert requests.get.calls == [
+        pretend.call(
+            ambient._GCP_IDENTITY_REQUEST_URL,
+            params={"audience": "some-audience", "format": "full"},
+            headers={"Metadata-Flavor": "Google"},
+            timeout=30,
         )
     ]
 
@@ -405,6 +531,7 @@ def test_detect_gcp(monkeypatch, product_name):
             ambient._GCP_IDENTITY_REQUEST_URL,
             params={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=30,
         )
     ]
     assert logger.debug.calls == [
