@@ -68,6 +68,7 @@ the OIDC token. This should be set to the intended audience for the token.
   * [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
   * [Compute Engine](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances)
   * and more
+* [Buildkite](https://buildkite.com/docs/agent/v3/cli-oidc)
 
 ## Licensing
 
