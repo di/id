@@ -81,6 +81,7 @@ def detect_github(audience: str) -> Optional[str]:
         req_url,
         params={"audience": audience},
         headers={"Authorization": f"bearer {req_token}"},
+        timeout=30,
     )
     try:
         resp.raise_for_status()
@@ -88,6 +89,8 @@ def detect_github(audience: str) -> Optional[str]:
         raise AmbientCredentialError(
             f"GitHub: OIDC token request failed (code={resp.status_code})"
         ) from http_error
+    except requests.Timeout:
+        raise AmbientCredentialError("GitHub: OIDC token request timed out")
 
     try:
         body = resp.json()
@@ -119,6 +122,7 @@ def detect_gcp(audience: str) -> Optional[str]:
             _GCP_TOKEN_REQUEST_URL,
             params={"scopes": "https://www.googleapis.com/auth/cloud-platform"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=30,
         )
         try:
             resp.raise_for_status()
@@ -126,6 +130,8 @@ def detect_gcp(audience: str) -> Optional[str]:
             raise AmbientCredentialError(
                 f"GCP: access token request failed (code={resp.status_code})"
             ) from http_error
+        except requests.Timeout:
+            raise AmbientCredentialError("GCP: access token request timed out")
 
         access_token = resp.json().get("access_token")
 
@@ -138,6 +144,7 @@ def detect_gcp(audience: str) -> Optional[str]:
             headers={
                 "Authorization": f"Bearer {access_token}",
             },
+            timeout=30,
         )
 
         logger.debug("GCP: requesting OIDC token")
@@ -147,6 +154,8 @@ def detect_gcp(audience: str) -> Optional[str]:
             raise AmbientCredentialError(
                 f"GCP: OIDC token request failed (code={resp.status_code})"
             ) from http_error
+        except requests.Timeout:
+            raise AmbientCredentialError("GCP: OIDC token request timed out")
 
         oidc_token: str = resp.json().get("token")
 
@@ -179,6 +188,7 @@ def detect_gcp(audience: str) -> Optional[str]:
             _GCP_IDENTITY_REQUEST_URL,
             params={"audience": audience, "format": "full"},
             headers={"Metadata-Flavor": "Google"},
+            timeout=30,
         )
 
         try:
@@ -187,6 +197,8 @@ def detect_gcp(audience: str) -> Optional[str]:
             raise AmbientCredentialError(
                 f"GCP: OIDC token request failed (code={resp.status_code})"
             ) from http_error
+        except requests.Timeout:
+            raise AmbientCredentialError("GCP: OIDC token request timed out")
 
         logger.debug("GCP: successfully requested OIDC token")
         return resp.text
