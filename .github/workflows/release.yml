@@ -64,16 +64,15 @@ jobs:
   release-pypi:
     needs: [build, generate-provenance]
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      id-token: write # To upload via OIDC.
     steps:
       - name: Download artifacts directories # goes to current working directory
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
 
       - name: publish
-        uses: pypa/gh-action-pypi-publish@a3a3bafbb3e5a75a854ae1bc53ae128cf22c4af4
+        uses: pypa/gh-action-pypi-publish@a3a3bafbb3e5a75a854ae1bc53ae128cf22c4af4 # v1.8.1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
           packages_dir: built-packages/
 
   release-github:
