@@ -64,7 +64,8 @@ jobs:
   release-pypi:
     needs: [build, generate-provenance]
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      id-token: write # To upload via OIDC.
     steps:
       - name: Download artifacts directories # goes to current working directory
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
