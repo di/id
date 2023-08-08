@@ -91,7 +91,6 @@ jobs:
         uses: sigstore/gh-action-sigstore-python@v2.0.0
         with:
           inputs: ./built-packages/*.tar.gz ./built-packages/*.whl
-          bundle-only: true
 
       - name: Upload artifacts to GitHub
         # Confusingly, this action also supports updating releases, not
