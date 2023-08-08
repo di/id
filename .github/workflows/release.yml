@@ -88,10 +88,9 @@ jobs:
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
 
       - name: Sign artifacts
-        uses: sigstore/gh-action-sigstore-python@v1.2.3
+        uses: sigstore/gh-action-sigstore-python@v2.0.0
         with:
           inputs: ./built-packages/*.tar.gz ./built-packages/*.whl
-          bundle-only: true
 
       - name: Upload artifacts to GitHub
         # Confusingly, this action also supports updating releases, not
