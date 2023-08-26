@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 
 class IdentityError(Exception):
