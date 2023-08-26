@@ -26,4 +26,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--Release URLs -->
 [Unreleased]: https://github.com/di/id/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/di/id/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/di/id/compare/v1.0.0a2...v1.0.0
