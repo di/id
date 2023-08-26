@@ -6,10 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.0]
+
 ### Added
 
 * Added support for Buildkite OIDC tokens
   ([#21](https://github.com/di/id/pull/21))
+
+### Fixed
+
+* Improved the quality of error messages when an underlying
+  request fails ([#93](https://github.com/di/id/pull/93))
 
 ## [1.0.0]
 
