@@ -90,7 +90,11 @@ def test_detect_github_request_fails(monkeypatch):
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
 
-    resp = pretend.stub(raise_for_status=pretend.raiser(HTTPError), status_code=999)
+    resp = pretend.stub(
+        raise_for_status=pretend.raiser(HTTPError),
+        status_code=999,
+        content=b"something",
+    )
     requests = pretend.stub(
         get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError
     )
@@ -98,7 +102,7 @@ def test_detect_github_request_fails(monkeypatch):
 
     with pytest.raises(
         ambient.AmbientCredentialError,
-        match=r"GitHub: OIDC token request failed \(code=999\)",
+        match=r"GitHub: OIDC token request failed \(code=999, body='something'\)",
     ):
         ambient.detect_github("some-audience")
     assert requests.get.calls == [
@@ -198,7 +202,11 @@ def test_gcp_impersonation_access_token_request_fail(monkeypatch):
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
 
-    resp = pretend.stub(raise_for_status=pretend.raiser(HTTPError), status_code=999)
+    resp = pretend.stub(
+        raise_for_status=pretend.raiser(HTTPError),
+        status_code=999,
+        content=b"something",
+    )
     requests = pretend.stub(
         get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError
     )
@@ -206,7 +214,7 @@ def test_gcp_impersonation_access_token_request_fail(monkeypatch):
 
     with pytest.raises(
         ambient.AmbientCredentialError,
-        match=r"GCP: access token request failed \(code=999\)",
+        match=r"GCP: access token request failed \(code=999, body='something'\)",
     ):
         ambient.detect_gcp("some-audience")
 
@@ -284,7 +292,9 @@ def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
         raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
     )
     post_resp = pretend.stub(
-        raise_for_status=pretend.raiser(HTTPError), status_code=999
+        raise_for_status=pretend.raiser(HTTPError),
+        status_code=999,
+        content=b"something",
     )
     requests = pretend.stub(
         get=pretend.call_recorder(lambda url, **kw: get_resp),
@@ -295,7 +305,7 @@ def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
 
     with pytest.raises(
         ambient.AmbientCredentialError,
-        match=r"GCP: OIDC token request failed \(code=999\)",
+        match=r"GCP: OIDC token request failed \(code=999, body='something'\)",
     ):
         ambient.detect_gcp("some-audience")
 
@@ -457,7 +467,11 @@ def test_detect_gcp_request_fails(monkeypatch):
     )
     monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
 
-    resp = pretend.stub(raise_for_status=pretend.raiser(HTTPError), status_code=999)
+    resp = pretend.stub(
+        raise_for_status=pretend.raiser(HTTPError),
+        status_code=999,
+        content=b"something",
+    )
     requests = pretend.stub(
         get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError
     )
@@ -465,7 +479,7 @@ def test_detect_gcp_request_fails(monkeypatch):
 
     with pytest.raises(
         ambient.AmbientCredentialError,
-        match=r"GCP: OIDC token request failed \(code=999\)",
+        match=r"GCP: OIDC token request failed \(code=999, body='something'\)",
     ):
         ambient.detect_gcp("some-audience")
     assert requests.get.calls == [

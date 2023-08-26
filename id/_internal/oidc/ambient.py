@@ -87,7 +87,8 @@ def detect_github(audience: str) -> Optional[str]:
         resp.raise_for_status()
     except requests.HTTPError as http_error:
         raise AmbientCredentialError(
-            f"GitHub: OIDC token request failed (code={resp.status_code})"
+            f"GitHub: OIDC token request failed (code={resp.status_code}, "
+            f"body={resp.content.decode()!r})"
         ) from http_error
     except requests.Timeout:
         raise AmbientCredentialError("GitHub: OIDC token request timed out")
@@ -128,7 +129,8 @@ def detect_gcp(audience: str) -> Optional[str]:
             resp.raise_for_status()
         except requests.HTTPError as http_error:
             raise AmbientCredentialError(
-                f"GCP: access token request failed (code={resp.status_code})"
+                f"GCP: access token request failed (code={resp.status_code}, "
+                f"body={resp.content.decode()!r})"
             ) from http_error
         except requests.Timeout:
             raise AmbientCredentialError("GCP: access token request timed out")
@@ -152,7 +154,8 @@ def detect_gcp(audience: str) -> Optional[str]:
             resp.raise_for_status()
         except requests.HTTPError as http_error:
             raise AmbientCredentialError(
-                f"GCP: OIDC token request failed (code={resp.status_code})"
+                f"GCP: OIDC token request failed (code={resp.status_code}, "
+                f"body={resp.content.decode()!r})"
             ) from http_error
         except requests.Timeout:
             raise AmbientCredentialError("GCP: OIDC token request timed out")
@@ -195,7 +198,8 @@ def detect_gcp(audience: str) -> Optional[str]:
             resp.raise_for_status()
         except requests.HTTPError as http_error:
             raise AmbientCredentialError(
-                f"GCP: OIDC token request failed (code={resp.status_code})"
+                f"GCP: OIDC token request failed (code={resp.status_code}, "
+                f"body={resp.content.decode()!r})"
             ) from http_error
         except requests.Timeout:
             raise AmbientCredentialError("GCP: OIDC token request timed out")
