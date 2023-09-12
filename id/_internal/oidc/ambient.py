@@ -99,7 +99,7 @@ def detect_github(audience: str) -> Optional[str]:
     except Exception as e:
         raise AmbientCredentialError("GitHub: malformed or incomplete JSON") from e
 
-    logger.debug("GCP: successfully requested OIDC token")
+    logger.debug("GitHub: successfully requested OIDC token")
     return payload.value
 
 
