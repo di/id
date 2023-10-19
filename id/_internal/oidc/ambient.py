@@ -18,6 +18,7 @@ Ambient OIDC credential detection.
 
 import logging
 import os
+import re
 import shutil
 import subprocess  # nosec B404
 from typing import Optional
@@ -34,6 +35,7 @@ _GCP_TOKEN_REQUEST_URL = "http://metadata/computeMetadata/v1/instance/service-ac
 _GCP_IDENTITY_REQUEST_URL = "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity"  # noqa
 _GCP_GENERATEIDTOKEN_REQUEST_URL = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{}:generateIdToken"  # noqa
 
+_env_var_regex = re.compile(r"[^A-Z0-9_]")
 
 class _GitHubTokenPayload(BaseModel):
     """
@@ -258,3 +260,30 @@ def detect_buildkite(audience: str) -> Optional[str]:
         )
 
     return process.stdout.strip()
+
+def detect_env_var(audience: str) -> Optional[str]:
+    """
+    Detect and return ambient OIDC credential from an environment variable.
+
+    This detection works with GitLab pipeline `id_tokens`.
+
+    The environment variable name is "<AUD>_ID_TOKEN" where <AUD> is the uppercased
+    audience argument where all characters outside of ASCII letters and digits are
+    replaced with "_". So audience "sigstore" uses environment variable
+    SIGSTORE_ID_TOKEN and audience "http://test.audience" uses environment variable
+    HTTP___TEST_AUDIENCE_ID_TOKEN.
+
+    Returns `None` if a matching environment variable was not found for the audience.
+    """
+    logger.debug("Env var: looking for OIDC credentials")
+
+    # construct a reasonable env var name from the audience
+    sanitized_audience = _env_var_regex.sub('_', audience.upper())
+    var_name = f"{sanitized_audience}_ID_TOKEN"
+    token = os.getenv(var_name)
+    if token:
+        logger.debug(f"Env var: Found token in variable {var_name}")
+    else:
+        logger.debug(f"Env var: No token found in variable {var_name}; giving up")
+
+    return token

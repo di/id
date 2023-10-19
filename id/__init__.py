@@ -61,12 +61,14 @@ def detect_credential(audience: str) -> Optional[str]:
         detect_buildkite,
         detect_gcp,
         detect_github,
+        detect_env_var,
     )
 
     detectors: List[Callable[..., Optional[str]]] = [
         detect_github,
         detect_gcp,
         detect_buildkite,
+        detect_env_var,
     ]
     for detector in detectors:
         credential = detector(audience)

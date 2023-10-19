@@ -58,6 +58,11 @@ For Python API usage, there is a single importable function, `detect_credential`
 This function requires an `audience` parameter, which is used when generating
 the OIDC token. This should be set to the intended audience for the token.
 
+If your environment provides the token in an environment variable, please
+ensure the variable is named `<AUDIENCE>_ID_TOKEN` (where AUDIENCE is the
+uppercased `audience` parameter with all characters except ASCII letters
+and digits replaced with underscores.
+
 ## Supported environments
 
 `id` currently supports ambient credential detection in the following environments:
@@ -69,6 +74,8 @@ the OIDC token. This should be set to the intended audience for the token.
   * [Compute Engine](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances)
   * and more
 * [Buildkite](https://buildkite.com/docs/agent/v3/cli-oidc)
+* [GitLab](https://docs.gitlab.com/ee/ci/secrets/id_token_authentication.html) (and
+  other environments where the OIDC token is made available in an environment variable)
 
 ## Licensing
 
