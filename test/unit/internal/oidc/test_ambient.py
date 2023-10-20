@@ -641,3 +641,16 @@ def test_buildkite(monkeypatch):
             text=True,
         )
     ]
+
+
+def test_buildkite_bad_env(monkeypatch):
+    monkeypatch.delenv("BUILDKITE", False)
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    assert ambient.detect_buildkite("some-audience") == None
+    assert logger.debug.calls == [
+        pretend.call("Buildkite: looking for OIDC credentials"),
+        pretend.call("Buildkite: environment doesn't look like BuildKite; giving up"),
+    ]
