@@ -37,6 +37,7 @@ _GCP_GENERATEIDTOKEN_REQUEST_URL = "https://iamcredentials.googleapis.com/v1/pro
 
 _env_var_regex = re.compile(r"[^A-Z0-9_]")
 
+
 class _GitHubTokenPayload(BaseModel):
     """
     A trivial model for GitHub's OIDC token endpoint payload.
@@ -261,6 +262,7 @@ def detect_buildkite(audience: str) -> Optional[str]:
 
     return process.stdout.strip()
 
+
 def detect_env_var(audience: str) -> Optional[str]:
     """
     Detect and return ambient OIDC credential from an environment variable.
@@ -278,7 +280,7 @@ def detect_env_var(audience: str) -> Optional[str]:
     logger.debug("Env var: looking for OIDC credentials")
 
     # construct a reasonable env var name from the audience
-    sanitized_audience = _env_var_regex.sub('_', audience.upper())
+    sanitized_audience = _env_var_regex.sub("_", audience.upper())
     var_name = f"{sanitized_audience}_ID_TOKEN"
     token = os.getenv(var_name)
     if token:
