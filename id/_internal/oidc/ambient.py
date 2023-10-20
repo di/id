@@ -35,7 +35,7 @@ _GCP_TOKEN_REQUEST_URL = "http://metadata/computeMetadata/v1/instance/service-ac
 _GCP_IDENTITY_REQUEST_URL = "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity"  # noqa
 _GCP_GENERATEIDTOKEN_REQUEST_URL = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{}:generateIdToken"  # noqa
 
-_env_var_regex = re.compile(r"[^A-Z0-9_]")
+_env_var_regex = re.compile(r"[^A-Z0-9_]|^[^A-Z_]")
 
 
 class _GitHubTokenPayload(BaseModel):
@@ -263,29 +263,38 @@ def detect_buildkite(audience: str) -> Optional[str]:
     return process.stdout.strip()
 
 
-def detect_env_var(audience: str) -> Optional[str]:
+def detect_gitlab(audience: str) -> Optional[str]:
     """
-    Detect and return ambient OIDC credential from an environment variable.
+    Detect and return a GitLab CI/CD ambient OIDC credential.
 
-    This detection works with GitLab pipeline `id_tokens`.
+    This detection is based on an environment variable. The variable name must be
+    `<AUD>_ID_TOKEN`  where `<AUD>` is the uppercased audience argument where all
+    characters outside of ASCII letters and digits are replaced with "_". A
+    leading digit must also replaced with a "_".
 
-    The environment variable name is "<AUD>_ID_TOKEN" where <AUD> is the uppercased
-    audience argument where all characters outside of ASCII letters and digits are
-    replaced with "_". So audience "sigstore" uses environment variable
-    SIGSTORE_ID_TOKEN and audience "http://test.audience" uses environment variable
+    As an example, audience "sigstore" would require variable SIGSTORE_ID_TOKEN,
+    and audience "http://test.audience" would require variable
     HTTP___TEST_AUDIENCE_ID_TOKEN.
 
-    Returns `None` if a matching environment variable was not found for the audience.
+    Returns `None` if the context is not GitLab CI/CD environment.
+
+    Raises if the environment is GitLab, but the `<AUD>_ID_TOKEN` environment
+    variable is not set.
     """
-    logger.debug("Env var: looking for OIDC credentials")
+    logger.debug("GitLab: looking for OIDC credentials")
+
+    if not os.getenv("GITLAB_CI"):
+        logger.debug("GitLab: environment doesn't look like GitLab CI/CD; giving up")
+        return None
 
     # construct a reasonable env var name from the audience
     sanitized_audience = _env_var_regex.sub("_", audience.upper())
     var_name = f"{sanitized_audience}_ID_TOKEN"
     token = os.getenv(var_name)
-    if token:
-        logger.debug(f"Env var: Found token in variable {var_name}")
-    else:
-        logger.debug(f"Env var: No token found in variable {var_name}; giving up")
+    if not token:
+        raise AmbientCredentialError(
+            f"GitLab: Environment variable {var_name} not found"
+        )
 
+    logger.debug(f"GitLab: Found token in environment variable {var_name}")
     return token

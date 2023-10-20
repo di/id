@@ -656,29 +656,53 @@ def test_buildkite_bad_env(monkeypatch):
     ]
 
 
-def test_env_var_bad_env(monkeypatch):
-    monkeypatch.delenv("SOME_AUDIENCE_ID_TOKEN", False)
+def test_gitlab_bad_env(monkeypatch):
+    monkeypatch.delenv("GITLAB_CI", False)
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
 
-    assert ambient.detect_env_var("some-audience") is None
+    assert ambient.detect_gitlab("some-audience") is None
     assert logger.debug.calls == [
-        pretend.call("Env var: looking for OIDC credentials"),
-        pretend.call(
-            "Env var: No token found in variable SOME_AUDIENCE_ID_TOKEN; giving up"
-        ),
+        pretend.call("GitLab: looking for OIDC credentials"),
+        pretend.call("GitLab: environment doesn't look like GitLab CI/CD; giving up"),
     ]
 
 
-def test_env_var(monkeypatch):
-    monkeypatch.setenv("SOME_AUDIENCE_ID_TOKEN", "fakejwt")
+def test_gitlab_no_variable(monkeypatch):
+    monkeypatch.setenv("GITLAB_CI", "true")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
 
-    assert ambient.detect_env_var("some-audience") == "fakejwt"
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match="GitLab: Environment variable SOME_AUDIENCE_ID_TOKEN not found",
+    ):
+        ambient.detect_gitlab("some-audience")
+
     assert logger.debug.calls == [
-        pretend.call("Env var: looking for OIDC credentials"),
-        pretend.call("Env var: Found token in variable SOME_AUDIENCE_ID_TOKEN"),
+        pretend.call("GitLab: looking for OIDC credentials"),
+    ]
+
+
+def test_gitlab(monkeypatch):
+    monkeypatch.setenv("GITLAB_CI", "true")
+    monkeypatch.setenv("SOME_AUDIENCE_ID_TOKEN", "fakejwt")
+    monkeypatch.setenv("_1_OTHER_AUDIENCE_ID_TOKEN", "fakejwt2")
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    assert ambient.detect_gitlab("some-audience") == "fakejwt"
+    assert ambient.detect_gitlab("11 other audience") == "fakejwt2"
+    assert logger.debug.calls == [
+        pretend.call("GitLab: looking for OIDC credentials"),
+        pretend.call(
+            "GitLab: Found token in environment variable SOME_AUDIENCE_ID_TOKEN"
+        ),
+        pretend.call("GitLab: looking for OIDC credentials"),
+        pretend.call(
+            "GitLab: Found token in environment variable _1_OTHER_AUDIENCE_ID_TOKEN"
+        ),
     ]
