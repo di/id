@@ -654,3 +654,29 @@ def test_buildkite_bad_env(monkeypatch):
         pretend.call("Buildkite: looking for OIDC credentials"),
         pretend.call("Buildkite: environment doesn't look like BuildKite; giving up"),
     ]
+
+
+def test_env_var_bad_env(monkeypatch):
+    monkeypatch.delenv("SOME_AUDIENCE_ID_TOKEN", False)
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    assert ambient.detect_env_var("some-audience") == None
+    assert logger.debug.calls == [
+        pretend.call("Env var: looking for OIDC credentials"),
+        pretend.call("Env var: No token found in variable SOME_AUDIENCE_ID_TOKEN; giving up"),
+    ]
+
+
+def test_env_var(monkeypatch):
+    monkeypatch.setenv("SOME_AUDIENCE_ID_TOKEN", "fakejwt")
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    assert ambient.detect_env_var("some-audience") == "fakejwt"
+    assert logger.debug.calls == [
+        pretend.call("Env var: looking for OIDC credentials"),
+        pretend.call("Env var: Found token in variable SOME_AUDIENCE_ID_TOKEN"),
+    ]
