@@ -69,6 +69,14 @@ the OIDC token. This should be set to the intended audience for the token.
   * [Compute Engine](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances)
   * and more
 * [Buildkite](https://buildkite.com/docs/agent/v3/cli-oidc)
+* [GitLab](https://docs.gitlab.com/ee/ci/secrets/id_token_authentication.html) (See _environment variables_ below)
+
+### Tokens in environment variables
+
+GitLab provides OIDC tokens through environment variables. The variable name must be
+`<AUD>_ID_TOKEN`  where `<AUD>` is the uppercased audience argument where all
+characters outside of ASCII letters and digits are replaced with "_". A leading digit
+must also be replaced with a "_".
 
 ## Licensing
 
