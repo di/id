@@ -9,8 +9,8 @@ id
 <!--- @end-badges@ --->
 
 `id` is a Python tool for generating OIDC identities. It can automatically
-detect and produce OIDC credentials on an number of environments, including GitHub Actions
-and Google Cloud.
+detect and produce OIDC credentials on a number of environments, including
+GitHub Actions, GitLab pipelines and Google Cloud.
 
 ## Installation
 
@@ -58,6 +58,10 @@ For Python API usage, there is a single importable function, `detect_credential`
 This function requires an `audience` parameter, which is used when generating
 the OIDC token. This should be set to the intended audience for the token.
 
+If no supported environment is found, `detect_credential` returns None. If a supported
+environment is found but `detect_credential` fails to retrieve a token, it raises
+`AmbientCredentialError`.
+
 ## Supported environments
 
 `id` currently supports ambient credential detection in the following environments:
@@ -75,8 +79,8 @@ the OIDC token. This should be set to the intended audience for the token.
 
 GitLab provides OIDC tokens through environment variables. The variable name must be
 `<AUD>_ID_TOKEN`  where `<AUD>` is the uppercased audience argument where all
-characters outside of ASCII letters and digits are replaced with "_". A leading digit
-must also be replaced with a "_".
+characters outside of ASCII letters and digits are replaced with "\_". A leading digit
+must also be replaced with a "\_".
 
 ## Licensing
 
