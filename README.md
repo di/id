@@ -58,7 +58,7 @@ For Python API usage, there is a single importable function, `detect_credential`
 This function requires an `audience` parameter, which is used when generating
 the OIDC token. This should be set to the intended audience for the token.
 
-If no supported environment is found, `detect_credential` returns None. If a supported
+If no supported environment is found, `detect_credential` returns `None`. If a supported
 environment is found but `detect_credential` fails to retrieve a token, it raises
 `AmbientCredentialError`.
 
