@@ -14,7 +14,7 @@ GitHub Actions, GitLab pipelines and Google Cloud.
 
 ## Installation
 
-`id` requires Python 3.7 or newer, and can be installed directly via `pip`:
+`id` requires Python 3.8 or newer, and can be installed directly via `pip`:
 
 ```console
 python -m pip install id
