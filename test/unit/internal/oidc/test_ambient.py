@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+
 import pretend
 import pytest
 from requests import HTTPError, Timeout
@@ -663,4 +665,95 @@ def test_gitlab(monkeypatch):
         pretend.call("GitLab: Found token in environment variable SOME_AUDIENCE_ID_TOKEN"),
         pretend.call("GitLab: looking for OIDC credentials"),
         pretend.call("GitLab: Found token in environment variable _1_OTHER_AUDIENCE_ID_TOKEN"),
+    ]
+
+
+def test_circleci_bad_env(monkeypatch):
+    monkeypatch.delenv("CIRCLECI", False)
+
+    logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
+    monkeypatch.setattr(ambient, "logger", logger)
+
+    assert ambient.detect_circleci("some-audience") is None
+    assert logger.debug.calls == [
+        pretend.call("CircleCI: looking for OIDC credentials"),
+        pretend.call("CircleCI: environment doesn't look like CircleCI; giving up"),
+    ]
+
+
+def test_circleci_no_circleci_cli(monkeypatch):
+    monkeypatch.setenv("CIRCLECI", "true")
+
+    # Mock out the `which` call. We don't expect this to exist in the `PATH` but
+    # just in case someone is running these tests on a Buildkite host...
+    shutil = pretend.stub(which=pretend.call_recorder(lambda bin: None))
+    monkeypatch.setattr(ambient, "shutil", shutil)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"CircleCI: could not find `circleci` in the environment",
+    ):
+        ambient.detect_circleci("some-audience")
+
+    assert shutil.which.calls == [pretend.call("circleci")]
+
+
+def test_circleci_circlecli_error(monkeypatch):
+    monkeypatch.setenv("CIRCLECI", "true")
+
+    # Mock out the `which` call to show that we have a `circleci` in our `PATH`.
+    shutil = pretend.stub(which=pretend.call_recorder(lambda bin: "/usr/bin/circleci"))
+    monkeypatch.setattr(ambient, "shutil", shutil)
+
+    # Mock out `run` call to emulate getting a non-zero return code from the `circleci`.
+    resp = pretend.stub(
+        returncode=-1,
+        stdout="mock error message",
+    )
+    subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
+    monkeypatch.setattr(ambient, "subprocess", subprocess)
+    payload = json.dumps({"aud": "some-audience"})
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"CircleCI: the `circleci` tool encountered an error: mock error message",
+    ):
+        ambient.detect_circleci("some-audience")
+
+    assert shutil.which.calls == [pretend.call("circleci")]
+    assert subprocess.run.calls == [
+        pretend.call(
+            ["circleci", "run", "oidc", "get", "--claims", payload],
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+    ]
+
+
+def test_circleci(monkeypatch):
+    monkeypatch.setenv("CIRCLECI", "true")
+
+    # Mock out the `which` call to show that we have a `circleci` in our `PATH`.
+    shutil = pretend.stub(which=pretend.call_recorder(lambda bin: "/usr/bin/circleci"))
+    monkeypatch.setattr(ambient, "shutil", shutil)
+
+    # Mock out `run` call to emulate getting a successful return code from the `circleci`.
+    resp = pretend.stub(
+        returncode=0,
+        stdout="fakejwt",
+    )
+    subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
+    monkeypatch.setattr(ambient, "subprocess", subprocess)
+    payload = json.dumps({"aud": "some-audience"})
+
+    assert ambient.detect_circleci("some-audience") == "fakejwt"
+    assert shutil.which.calls == [pretend.call("circleci")]
+    assert subprocess.run.calls == [
+        pretend.call(
+            ["circleci", "run", "oidc", "get", "--claims", payload],
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
     ]
