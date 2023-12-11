@@ -36,9 +36,7 @@ def _parser() -> argparse.ArgumentParser:
         description="a tool for generating OIDC identities",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
-        "-V", "--version", action="version", version=f"%(prog)s {__version__}"
-    )
+    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(
         "-v",
         "--verbose",

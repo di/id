@@ -95,9 +95,7 @@ def test_detect_github_request_fails(monkeypatch):
         status_code=999,
         content=b"something",
     )
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError
-    )
+    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError)
     monkeypatch.setattr(ambient, "requests", requests)
 
     with pytest.raises(
@@ -148,9 +146,7 @@ def test_detect_github_bad_payload(monkeypatch):
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
 
-    resp = pretend.stub(
-        raise_for_status=lambda: None, json=pretend.call_recorder(lambda: {})
-    )
+    resp = pretend.stub(raise_for_status=lambda: None, json=pretend.call_recorder(lambda: {}))
     requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp))
     monkeypatch.setattr(ambient, "requests", requests)
 
@@ -195,9 +191,7 @@ def test_detect_github(monkeypatch):
 
 
 def test_gcp_impersonation_access_token_request_fail(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -207,9 +201,7 @@ def test_gcp_impersonation_access_token_request_fail(monkeypatch):
         status_code=999,
         content=b"something",
     )
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError
-    )
+    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError)
     monkeypatch.setattr(ambient, "requests", requests)
 
     with pytest.raises(
@@ -226,9 +218,7 @@ def test_gcp_impersonation_access_token_request_fail(monkeypatch):
 
 
 def test_gcp_impersonation_access_token_request_timeout(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -255,9 +245,7 @@ def test_gcp_impersonation_access_token_request_timeout(monkeypatch):
 
 
 def test_gcp_impersonation_access_token_missing(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -280,9 +268,7 @@ def test_gcp_impersonation_access_token_missing(monkeypatch):
 
 
 def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -318,9 +304,7 @@ def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
 
 
 def test_gcp_impersonation_identity_token_request_timeout(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -353,9 +337,7 @@ def test_gcp_impersonation_identity_token_request_timeout(monkeypatch):
 
 
 def test_gcp_impersonation_identity_token_missing(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -387,9 +369,7 @@ def test_gcp_impersonation_identity_token_missing(monkeypatch):
 
 
 def test_gcp_impersonation_succeeds(monkeypatch):
-    monkeypatch.setenv(
-        "GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com"
-    )
+    monkeypatch.setenv("GOOGLE_SERVICE_ACCOUNT_NAME", "identity@project.iam.gserviceaccount.com")
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -399,9 +379,7 @@ def test_gcp_impersonation_succeeds(monkeypatch):
     get_resp = pretend.stub(
         raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
     )
-    post_resp = pretend.stub(
-        raise_for_status=lambda: None, json=lambda: {"token": oidc_token}
-    )
+    post_resp = pretend.stub(raise_for_status=lambda: None, json=lambda: {"token": oidc_token})
     requests = pretend.stub(
         get=pretend.call_recorder(lambda url, **kw: get_resp),
         post=pretend.call_recorder(lambda url, **kw: post_resp),
@@ -430,9 +408,7 @@ def test_gcp_bad_env(monkeypatch):
     assert ambient.detect_gcp("some-audience") is None
     assert logger.debug.calls == [
         pretend.call("GCP: looking for OIDC credentials"),
-        pretend.call(
-            "GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"
-        ),
+        pretend.call("GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"),
         pretend.call("GCP: environment doesn't have GCP product name file; giving up"),
     ]
 
@@ -451,9 +427,7 @@ def test_gcp_wrong_product(monkeypatch):
 
     assert logger.debug.calls == [
         pretend.call("GCP: looking for OIDC credentials"),
-        pretend.call(
-            "GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"
-        ),
+        pretend.call("GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"),
         pretend.call(
             "GCP: product name file exists, but product name is 'Unsupported Product'; giving up"
         ),
@@ -472,9 +446,7 @@ def test_detect_gcp_request_fails(monkeypatch):
         status_code=999,
         content=b"something",
     )
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError
-    )
+    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError)
     monkeypatch.setattr(ambient, "requests", requests)
 
     with pytest.raises(
@@ -551,9 +523,7 @@ def test_detect_gcp(monkeypatch, product_name):
     ]
     assert logger.debug.calls == [
         pretend.call("GCP: looking for OIDC credentials"),
-        pretend.call(
-            "GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"
-        ),
+        pretend.call("GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation"),
         pretend.call("GCP: requesting OIDC token"),
         pretend.call("GCP: successfully requested OIDC token"),
     ]
@@ -580,9 +550,7 @@ def test_buildkite_agent_error(monkeypatch):
     monkeypatch.setenv("BUILDKITE", "true")
 
     # Mock out the `which` call to show that we have a `buildkite-agent` in our `PATH`.
-    shutil = pretend.stub(
-        which=pretend.call_recorder(lambda bin: "/usr/bin/buildkite-agent")
-    )
+    shutil = pretend.stub(which=pretend.call_recorder(lambda bin: "/usr/bin/buildkite-agent"))
     monkeypatch.setattr(ambient, "shutil", shutil)
 
     # Mock out `run` call to emulate getting a non-zero return code from the `buildkite-agent`.
@@ -590,9 +558,7 @@ def test_buildkite_agent_error(monkeypatch):
         returncode=-1,
         stdout="mock error message",
     )
-    subprocess = pretend.stub(
-        run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None
-    )
+    subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
     monkeypatch.setattr(ambient, "subprocess", subprocess)
 
     with pytest.raises(
@@ -616,9 +582,7 @@ def test_buildkite(monkeypatch):
     monkeypatch.setenv("BUILDKITE", "true")
 
     # Mock out the `which` call to show that we have a `buildkite-agent` in our `PATH`.
-    shutil = pretend.stub(
-        which=pretend.call_recorder(lambda bin: "/usr/bin/buildkite-agent")
-    )
+    shutil = pretend.stub(which=pretend.call_recorder(lambda bin: "/usr/bin/buildkite-agent"))
     monkeypatch.setattr(ambient, "shutil", shutil)
 
     # Mock out `run` call to emulate getting a successful return code from the `buildkite-agent`.
@@ -626,9 +590,7 @@ def test_buildkite(monkeypatch):
         returncode=0,
         stdout="fakejwt",
     )
-    subprocess = pretend.stub(
-        run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None
-    )
+    subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
     monkeypatch.setattr(ambient, "subprocess", subprocess)
 
     assert ambient.detect_buildkite("some-audience") == "fakejwt"
@@ -698,11 +660,7 @@ def test_gitlab(monkeypatch):
     assert ambient.detect_gitlab("11 other audience") == "fakejwt2"
     assert logger.debug.calls == [
         pretend.call("GitLab: looking for OIDC credentials"),
-        pretend.call(
-            "GitLab: Found token in environment variable SOME_AUDIENCE_ID_TOKEN"
-        ),
+        pretend.call("GitLab: Found token in environment variable SOME_AUDIENCE_ID_TOKEN"),
         pretend.call("GitLab: looking for OIDC credentials"),
-        pretend.call(
-            "GitLab: Found token in environment variable _1_OTHER_AUDIENCE_ID_TOKEN"
-        ),
+        pretend.call("GitLab: Found token in environment variable _1_OTHER_AUDIENCE_ID_TOKEN"),
     ]

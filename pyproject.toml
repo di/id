@@ -34,8 +34,6 @@ Source = "https://github.com/di/id"
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
 lint = [
   "bandit",
-  "black",
-  "isort",
   "interrogate",
   "mypy",
   # NOTE(ww): ruff is under active development, so we pin conservatively here
@@ -44,11 +42,6 @@ lint = [
   "types-requests",
 ]
 dev = ["build", "bump >= 1.3.2", "id[test,lint]"]
-
-[tool.isort]
-multi_line_output = 3
-known_first_party = "id"
-include_trailing_comma = true
 
 [tool.interrogate]
 # don't enforce documentation coverage for packaging, testing, the virtual
@@ -85,4 +78,4 @@ exclude_dirs = ["./test"]
 line-length = 100
 # TODO: Enable "UP" here once Pydantic allows us to:
 # See: https://github.com/pydantic/pydantic/issues/4146
-select = ["E", "F", "W"]
+select = ["I", "E", "F", "W"]
