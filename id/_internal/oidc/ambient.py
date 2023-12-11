@@ -320,8 +320,9 @@ def detect_circleci(audience: str) -> Optional[str]:
     if shutil.which("circleci") is None:
         raise AmbientCredentialError("CircleCI: could not find `circleci` in the environment")
 
+    # See NOTE on `detect_buildkite` for why we silence these warnings.
     payload = json.dumps({"aud": audience})
-    process = subprocess.run(
+    process = subprocess.run(  # nosec B603, B607
         ["circleci", "run", "oidc", "get", "--claims", payload],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
