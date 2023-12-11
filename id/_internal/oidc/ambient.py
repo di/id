@@ -16,6 +16,7 @@
 Ambient OIDC credential detection.
 """
 
+import json
 import logging
 import os
 import re
@@ -31,9 +32,15 @@ from ... import AmbientCredentialError, GitHubOidcPermissionCredentialError
 logger = logging.getLogger(__name__)
 
 _GCP_PRODUCT_NAME_FILE = "/sys/class/dmi/id/product_name"
-_GCP_TOKEN_REQUEST_URL = "http://metadata/computeMetadata/v1/instance/service-accounts/default/token"  # noqa # nosec B105
-_GCP_IDENTITY_REQUEST_URL = "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity"  # noqa
-_GCP_GENERATEIDTOKEN_REQUEST_URL = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{}:generateIdToken"  # noqa
+_GCP_TOKEN_REQUEST_URL = (
+    "http://metadata/computeMetadata/v1/instance/service-accounts/default/token"  # noqa # nosec B105
+)
+_GCP_IDENTITY_REQUEST_URL = (
+    "http://metadata/computeMetadata/v1/instance/service-accounts/default/identity"  # noqa
+)
+_GCP_GENERATEIDTOKEN_REQUEST_URL = (
+    "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{}:generateIdToken"  # noqa
+)
 
 _env_var_regex = re.compile(r"[^A-Z0-9_]|^[^A-Z_]")
 
@@ -178,15 +185,11 @@ def detect_gcp(audience: str) -> Optional[str]:
             with open(_GCP_PRODUCT_NAME_FILE) as f:
                 name = f.read().strip()
         except OSError:
-            logger.debug(
-                "GCP: environment doesn't have GCP product name file; giving up"
-            )
+            logger.debug("GCP: environment doesn't have GCP product name file; giving up")
             return None
 
         if name not in {"Google", "Google Compute Engine"}:
-            logger.debug(
-                f"GCP: product name file exists, but product name is {name!r}; giving up"
-            )
+            logger.debug(f"GCP: product name file exists, but product name is {name!r}; giving up")
             return None
 
         logger.debug("GCP: requesting OIDC token")
@@ -292,9 +295,42 @@ def detect_gitlab(audience: str) -> Optional[str]:
     var_name = f"{sanitized_audience}_ID_TOKEN"
     token = os.getenv(var_name)
     if not token:
-        raise AmbientCredentialError(
-            f"GitLab: Environment variable {var_name} not found"
-        )
+        raise AmbientCredentialError(f"GitLab: Environment variable {var_name} not found")
 
     logger.debug(f"GitLab: Found token in environment variable {var_name}")
     return token
+
+
+def detect_circleci(audience: str) -> Optional[str]:
+    """
+    Detect and return a CircleCI ambient OIDC credential.
+
+    Returns `None` if the context is not a CircleCI environment.
+
+    Raises if the environment is GitHub Actions, but is incorrect or
+    insufficiently permissioned for an OIDC credential.
+    """
+    logger.debug("CircleCI: looking for OIDC credentials")
+
+    if not os.getenv("CIRCLECI"):
+        logger.debug("CircleCI: environment doesn't look like CircleCI; giving up")
+        return None
+
+    # Check that the circleci executable exists in the `PATH`.
+    if shutil.which("circleci") is None:
+        raise AmbientCredentialError("CircleCI: could not find `circleci` in the environment")
+
+    payload = json.dumps({"aud": audience})
+    process = subprocess.run(
+        ["circleci", "run", "oidc", "get", "--claims", payload],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    if process.returncode != 0:
+        raise AmbientCredentialError(
+            f"CircleCI: the `circleci` tool encountered an error: {process.stdout}"
+        )
+
+    return process.stdout.strip()
