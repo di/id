@@ -2,10 +2,13 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
+orbs:
+  python: circleci/python@2.1.1
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  say-hello:
+  test-id-throwaway:
     # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/configuration-reference/#executor-job
     docker:
@@ -15,12 +18,17 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Install id
+          command: |
+            python -m pip install . --user
+      - run:
+          name: Generate throwaway credential
+          command: |
+            python -m id throwaway
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  say-hello-workflow:
+  test-id-throwaway-workflow:
     jobs:
-      - say-hello
+      - test-id-throwaway
