@@ -17,10 +17,8 @@ jobs:
     # See: https://circleci.com/docs/configuration-reference/#steps
     steps:
       - checkout
-      - run:
-          name: Install id
-          command: |
-            python -m pip install . --user
+      - python/install-packages:
+          pkg-manager: pip-dist
       - run:
           name: Generate throwaway credential
           command: |
