@@ -59,6 +59,7 @@ def detect_credential(audience: str) -> Optional[str]:
     """
     from ._internal.oidc.ambient import (
         detect_buildkite,
+        detect_circleci,
         detect_gcp,
         detect_github,
         detect_gitlab,
@@ -69,6 +70,7 @@ def detect_credential(audience: str) -> Optional[str]:
         detect_gcp,
         detect_buildkite,
         detect_gitlab,
+        detect_circleci,
     ]
     for detector in detectors:
         credential = detector(audience)
