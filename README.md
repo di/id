@@ -74,6 +74,7 @@ environment is found but `detect_credential` fails to retrieve a token, it raise
   * and more
 * [Buildkite](https://buildkite.com/docs/agent/v3/cli-oidc)
 * [GitLab](https://docs.gitlab.com/ee/ci/secrets/id_token_authentication.html) (See _environment variables_ below)
+* [CircleCI](https://circleci.com/docs/oidc-tokens-with-custom-claims/)
 
 ### Tokens in environment variables
 
