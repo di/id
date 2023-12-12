@@ -22,7 +22,6 @@ import os
 import re
 import shutil
 import subprocess  # nosec B404
-from typing import Optional
 
 import requests
 from pydantic import BaseModel, StrictStr
@@ -55,7 +54,7 @@ class _GitHubTokenPayload(BaseModel):
     value: StrictStr
 
 
-def detect_github(audience: str) -> Optional[str]:
+def detect_github(audience: str) -> str | None:
     """
     Detect and return a GitHub Actions ambient OIDC credential.
 
@@ -113,7 +112,7 @@ def detect_github(audience: str) -> Optional[str]:
     return payload.value
 
 
-def detect_gcp(audience: str) -> Optional[str]:
+def detect_gcp(audience: str) -> str | None:
     """
     Detect an return a Google Cloud Platform ambient OIDC credential.
 
@@ -214,7 +213,7 @@ def detect_gcp(audience: str) -> Optional[str]:
         return resp.text
 
 
-def detect_buildkite(audience: str) -> Optional[str]:
+def detect_buildkite(audience: str) -> str | None:
     """
     Detect and return a Buildkite ambient OIDC credential.
 
@@ -253,8 +252,7 @@ def detect_buildkite(audience: str) -> Optional[str]:
     # we can do about this.
     process = subprocess.run(  # nosec B603, B607
         ["buildkite-agent", "oidc", "request-token", "--audience", audience],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
     )
 
@@ -266,7 +264,7 @@ def detect_buildkite(audience: str) -> Optional[str]:
     return process.stdout.strip()
 
 
-def detect_gitlab(audience: str) -> Optional[str]:
+def detect_gitlab(audience: str) -> str | None:
     """
     Detect and return a GitLab CI/CD ambient OIDC credential.
 
@@ -301,7 +299,7 @@ def detect_gitlab(audience: str) -> Optional[str]:
     return token
 
 
-def detect_circleci(audience: str) -> Optional[str]:
+def detect_circleci(audience: str) -> str | None:
     """
     Detect and return a CircleCI ambient OIDC credential.
 
@@ -324,8 +322,7 @@ def detect_circleci(audience: str) -> Optional[str]:
     payload = json.dumps({"aud": audience})
     process = subprocess.run(  # nosec B603, B607
         ["circleci", "run", "oidc", "get", "--claims", payload],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
     )
 

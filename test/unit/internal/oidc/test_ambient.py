@@ -573,8 +573,7 @@ def test_buildkite_agent_error(monkeypatch):
     assert subprocess.run.calls == [
         pretend.call(
             ["buildkite-agent", "oidc", "request-token", "--audience", "some-audience"],
-            stdout=None,
-            stderr=None,
+            capture_output=True,
             text=True,
         )
     ]
@@ -600,8 +599,7 @@ def test_buildkite(monkeypatch):
     assert subprocess.run.calls == [
         pretend.call(
             ["buildkite-agent", "oidc", "request-token", "--audience", "some-audience"],
-            stdout=None,
-            stderr=None,
+            capture_output=True,
             text=True,
         )
     ]
@@ -724,8 +722,7 @@ def test_circleci_circlecli_error(monkeypatch):
     assert subprocess.run.calls == [
         pretend.call(
             ["circleci", "run", "oidc", "get", "--claims", payload],
-            stdout=None,
-            stderr=None,
+            capture_output=True,
             text=True,
         )
     ]
@@ -752,8 +749,7 @@ def test_circleci(monkeypatch):
     assert subprocess.run.calls == [
         pretend.call(
             ["circleci", "run", "oidc", "get", "--claims", payload],
-            stdout=None,
-            stderr=None,
+            capture_output=True,
             text=True,
         )
     ]
