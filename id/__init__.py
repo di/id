@@ -18,7 +18,7 @@ API for retrieving OIDC tokens.
 
 from __future__ import annotations
 
-from typing import Callable, List, Optional
+from typing import Callable
 
 __version__ = "1.2.1"
 
@@ -49,7 +49,7 @@ class GitHubOidcPermissionCredentialError(AmbientCredentialError):
     pass
 
 
-def detect_credential(audience: str) -> Optional[str]:
+def detect_credential(audience: str) -> str | None:
     """
     Try each ambient credential detector, returning the first one to succeed
     or `None` if all fail.
@@ -65,7 +65,7 @@ def detect_credential(audience: str) -> Optional[str]:
         detect_gitlab,
     )
 
-    detectors: List[Callable[..., Optional[str]]] = [
+    detectors: list[Callable[..., str | None]] = [
         detect_github,
         detect_gcp,
         detect_buildkite,
