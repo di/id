@@ -39,7 +39,7 @@ a tool for generating OIDC identities
 positional arguments:
   audience       the OIDC audience to use
 
-options:
+optional arguments:
   -h, --help     show this help message and exit
   -V, --version  show program's version number and exit
   -v, --verbose  run with additional debug logging; supply multiple times to
