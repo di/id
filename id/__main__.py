@@ -16,7 +16,6 @@
 The `python -m id` entrypoint.
 """
 import argparse
-import json
 import logging
 import os
 
@@ -78,9 +77,8 @@ def main() -> None:
     token = detect_credential(args.audience)
     if token and args.decode:
         header, payload, signature = decode_oidc_token(token)
-        print(json.dumps(header, indent=4))
-        print(json.dumps(payload, indent=4))
-        print(signature)
+        print(header)
+        print(payload)
     else:
         print(token)
 
