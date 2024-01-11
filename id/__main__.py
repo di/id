@@ -45,6 +45,12 @@ def _parser() -> argparse.ArgumentParser:
         help="run with additional debug logging; supply multiple times to increase verbosity",
     )
     parser.add_argument(
+        "-d",
+        "--decode",
+        action="store_true",
+        help="decode the OIDC token into JSON",
+    )
+    parser.add_argument(
         "audience",
         type=str,
         default=os.getenv("ID_OIDC_AUDIENCE"),
@@ -66,9 +72,15 @@ def main() -> None:
 
     logger.debug(f"parsed arguments {args}")
 
-    from . import detect_credential
+    from . import decode_oidc_token, detect_credential
 
-    print(detect_credential(args.audience))
+    token = detect_credential(args.audience)
+    if token and args.decode:
+        header, payload, signature = decode_oidc_token(token)
+        print(header)
+        print(payload)
+    else:
+        print(token)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -18,6 +18,7 @@ API for retrieving OIDC tokens.
 
 from __future__ import annotations
 
+import base64
 from typing import Callable
 
 __version__ = "1.2.1"
@@ -77,3 +78,14 @@ def detect_credential(audience: str) -> str | None:
         if credential is not None:
             return credential
     return None
+
+
+def decode_oidc_token(token: str) -> tuple[str, str, str]:
+    # Split the token into its three parts: header, payload, and signature
+    header, payload, signature = token.split(".")
+
+    # Decode base64-encoded header and payload
+    decoded_header = base64.urlsafe_b64decode(header + "==").decode("utf-8")
+    decoded_payload = base64.urlsafe_b64decode(payload + "==").decode("utf-8")
+
+    return decoded_header, decoded_payload, signature
