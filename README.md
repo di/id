@@ -32,18 +32,19 @@ Top-level:
 
 <!-- @begin-id-help@ -->
 ```
-usage: id [-h] [-V] [-v] audience
+usage: id [-h] [-V] [-v] [-d] audience
 
 a tool for generating OIDC identities
 
 positional arguments:
   audience       the OIDC audience to use
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -V, --version  show program's version number and exit
   -v, --verbose  run with additional debug logging; supply multiple times to
                  increase verbosity (default: 0)
+  -d, --decode   decode the OIDC token into JSON (default: False)
 ```
 <!-- @end-id-help@ -->
 
