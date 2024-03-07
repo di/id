@@ -15,6 +15,7 @@
 """
 The `python -m id` entrypoint.
 """
+
 import argparse
 import logging
 import os
