@@ -43,6 +43,9 @@ lint = [
 ]
 dev = ["build", "bump >= 1.3.2", "id[test,lint]"]
 
+[project.entry-points."pipx.run"]
+id = "id.__main__:main"
+
 [tool.interrogate]
 # don't enforce documentation coverage for packaging, testing, the virtual
 # environment, or the CLI (which is documented separately).
