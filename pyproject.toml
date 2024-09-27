@@ -30,6 +30,9 @@ Homepage = "https://pypi.org/project/id/"
 Issues = "https://github.com/di/id/issues"
 Source = "https://github.com/di/id"
 
+[tool.flit.sdist]
+include = ["test/"]
+
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
 lint = [
