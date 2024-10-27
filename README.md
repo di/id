@@ -96,4 +96,4 @@ See [the contributing docs](https://github.com/di/id/blob/main/CONTRIBUTING.md) 
 This project emits a SLSA provenance on its release! This enables you to verify the integrity
 of the downloaded artifacts and ensured that the binary's code really comes from this source code.
 
-To do so, please follow the instructions [here](https://github.com/slsa-framework/slsa-github-generator#verification-of-provenance).
+To do so, please follow the instructions [here](https://github.com/slsa-framework/slsa-github-generator#verify-provenance).
