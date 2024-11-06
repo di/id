@@ -64,7 +64,7 @@ jobs:
     needs: [build, generate-provenance]
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # To upload via OIDC.
+      id-token: write # To upload via OIDC + generate attestations.
     steps:
       - name: Download artifacts directories # goes to current working directory
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
@@ -73,6 +73,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@61da13deb5f5124fb1536194f82ed3d9bbc7e8f3 # v1.12.0
         with:
           packages-dir: built-packages/
+          attestations: true
 
   release-github:
     needs: [build, generate-provenance]
@@ -80,16 +81,9 @@ jobs:
     permissions:
       # Needed to upload release assets.
       contents: write
-      # Needed to sign release assets.
-      id-token: write
     steps:
       - name: Download artifacts directories # goes to current working directory
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
-
-      - name: Sign artifacts
-        uses: sigstore/gh-action-sigstore-python@v3.0.0
-        with:
-          inputs: ./built-packages/*.tar.gz ./built-packages/*.whl
 
       - name: Upload artifacts to GitHub
         # Confusingly, this action also supports updating releases, not
