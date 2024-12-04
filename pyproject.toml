@@ -23,7 +23,7 @@ classifiers = [
   "Topic :: Security",
   "Topic :: Security :: Cryptography",
 ]
-dependencies = ["pydantic", "requests"]
+dependencies = ["requests"]
 requires-python = ">=3.8"
 
 [project.urls]
@@ -55,9 +55,6 @@ id = "id.__main__:main"
 # environment, or the CLI (which is documented separately).
 ignore-semiprivate = true
 ignore-private = true
-# Ignore nested classes for docstring coverage because we use them primarily
-# for pydantic model configuration.
-ignore-nested-classes = true
 fail-under = 100
 
 [tool.mypy]
@@ -76,7 +73,6 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
-plugins = ["pydantic.mypy"]
 
 [tool.bandit]
 exclude_dirs = ["./test"]

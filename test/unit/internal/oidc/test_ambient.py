@@ -143,12 +143,37 @@ def test_detect_github_request_timeout(monkeypatch):
     ]
 
 
-def test_detect_github_bad_payload(monkeypatch):
+def test_detect_github_invalid_json_payload(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
 
-    resp = pretend.stub(raise_for_status=lambda: None, json=pretend.call_recorder(lambda: {}))
+    resp = pretend.stub(raise_for_status=lambda: None, json=pretend.raiser(json.JSONDecodeError))
+    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp))
+    monkeypatch.setattr(ambient, "requests", requests)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match="GitHub: malformed or incomplete JSON",
+    ):
+        ambient.detect_github("some-audience")
+    assert requests.get.calls == [
+        pretend.call(
+            "fakeurl",
+            params={"audience": "some-audience"},
+            headers={"Authorization": "bearer faketoken"},
+            timeout=30,
+        )
+    ]
+
+
+@pytest.mark.parametrize("payload", [{}, {"notvalue": None}, {"value": None}, {"value": 1234}])
+def test_detect_github_bad_payload(monkeypatch, payload):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+
+    resp = pretend.stub(raise_for_status=lambda: None, json=pretend.call_recorder(lambda: payload))
     requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp))
     monkeypatch.setattr(ambient, "requests", requests)
 
