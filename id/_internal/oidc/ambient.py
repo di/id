@@ -26,7 +26,6 @@ import shutil
 import subprocess  # nosec B404
 
 import requests
-from pydantic import BaseModel, StrictStr
 
 from ... import AmbientCredentialError, GitHubOidcPermissionCredentialError
 
@@ -44,16 +43,6 @@ _GCP_GENERATEIDTOKEN_REQUEST_URL = (
 )
 
 _env_var_regex = re.compile(r"[^A-Z0-9_]|^[^A-Z_]")
-
-
-class _GitHubTokenPayload(BaseModel):
-    """
-    A trivial model for GitHub's OIDC token endpoint payload.
-
-    This exists solely to provide nice error handling.
-    """
-
-    value: StrictStr
 
 
 def detect_github(audience: str) -> str | None:
@@ -106,12 +95,15 @@ def detect_github(audience: str) -> str | None:
 
     try:
         body = resp.json()
-        payload = _GitHubTokenPayload(**body)
+        value = body["value"]
+
+        if not isinstance(value, str):
+            raise ValueError("OIDC token is not a string")
     except Exception as e:
         raise AmbientCredentialError("GitHub: malformed or incomplete JSON") from e
 
     logger.debug("GitHub: successfully requested OIDC token")
-    return payload.value
+    return value
 
 
 def detect_gcp(audience: str) -> str | None:
