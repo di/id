@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.0]
+
+### Changed
+
+* Drop dependency on `pydantic` ([#320](https://github.com/di/id/pull/320))
+
 ## [1.4.0]
 
 ### Added
@@ -54,7 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * Initial split from https://github.com/sigstore/sigstore-python
 
 <!--Release URLs -->
-[Unreleased]: https://github.com/di/id/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/di/id/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/di/id/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/di/id/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/di/id/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/di/id/compare/v1.2.0...v1.2.1
