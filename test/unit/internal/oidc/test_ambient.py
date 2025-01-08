@@ -215,13 +215,9 @@ def test_gcp_impersonation_access_token_request_fail(monkeypatch):
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
 
-    resp = pretend.stub(
-        raise_for_status=pretend.raiser(HTTPError),
-        status_code=999,
-        content=b"something",
-    )
-    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError)
-    monkeypatch.setattr(ambient, "requests", requests)
+    resp = pretend.stub(status=999, data=b"something")
+    u3 = pretend.stub(request=pretend.call_recorder(lambda meth, url, **kw: resp))
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -242,13 +238,11 @@ def test_gcp_impersonation_access_token_request_timeout(monkeypatch):
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
 
-    resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: resp),
-        HTTPError=HTTPError,
-        Timeout=Timeout,
+    u3 = pretend.stub(
+        request=pretend.raiser(ValueError), exceptions=pretend.stub(MaxRetryError=ValueError)
     )
-    monkeypatch.setattr(ambient, "requests", requests)
+
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -269,9 +263,9 @@ def test_gcp_impersonation_access_token_missing(monkeypatch):
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
 
-    resp = pretend.stub(raise_for_status=lambda: None, json=lambda: {})
-    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp))
-    monkeypatch.setattr(ambient, "requests", requests)
+    resp = pretend.stub(status=200, json=lambda: {})
+    u3 = pretend.stub(request=pretend.call_recorder(lambda meth, url, **kw: resp))
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -293,20 +287,16 @@ def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
     monkeypatch.setattr(ambient, "logger", logger)
 
     access_token = pretend.stub()
-    get_resp = pretend.stub(
-        raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
-    )
+    get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
     post_resp = pretend.stub(
-        raise_for_status=pretend.raiser(HTTPError),
-        status_code=999,
-        content=b"something",
+        status=999,
+        data=b"something",
     )
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: get_resp),
+    u3 = pretend.stub(
+        request=pretend.call_recorder(lambda url, **kw: get_resp),
         post=pretend.call_recorder(lambda url, **kw: post_resp),
-        HTTPError=HTTPError,
     )
-    monkeypatch.setattr(ambient, "requests", requests)
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -329,17 +319,15 @@ def test_gcp_impersonation_identity_token_request_timeout(monkeypatch):
     monkeypatch.setattr(ambient, "logger", logger)
 
     access_token = pretend.stub()
-    get_resp = pretend.stub(
-        raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
-    )
+    get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
     post_resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
     requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: get_resp),
+        request=pretend.call_recorder(lambda url, **kw: get_resp),
         post=pretend.call_recorder(lambda url, **kw: post_resp),
         HTTPError=HTTPError,
         Timeout=Timeout,
     )
-    monkeypatch.setattr(ambient, "requests", requests)
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -362,16 +350,14 @@ def test_gcp_impersonation_identity_token_missing(monkeypatch):
     monkeypatch.setattr(ambient, "logger", logger)
 
     access_token = pretend.stub()
-    get_resp = pretend.stub(
-        raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
-    )
-    post_resp = pretend.stub(raise_for_status=lambda: None, json=lambda: {})
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: get_resp),
+    get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
+    post_resp = pretend.stub(status=200, json=lambda: {})
+    u3 = pretend.stub(
+        request=pretend.call_recorder(lambda url, **kw: get_resp),
         post=pretend.call_recorder(lambda url, **kw: post_resp),
         HTTPError=HTTPError,
     )
-    monkeypatch.setattr(ambient, "requests", requests)
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -395,16 +381,14 @@ def test_gcp_impersonation_succeeds(monkeypatch):
 
     access_token = pretend.stub()
     oidc_token = pretend.stub()
-    get_resp = pretend.stub(
-        raise_for_status=lambda: None, json=lambda: {"access_token": access_token}
-    )
-    post_resp = pretend.stub(raise_for_status=lambda: None, json=lambda: {"token": oidc_token})
-    requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: get_resp),
+    get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
+    post_resp = pretend.stub(status=200, json=lambda: {"token": oidc_token})
+    u3 = pretend.stub(
+        request=pretend.call_recorder(lambda url, **kw: get_resp),
         post=pretend.call_recorder(lambda url, **kw: post_resp),
         HTTPError=HTTPError,
     )
-    monkeypatch.setattr(ambient, "requests", requests)
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     assert ambient.detect_gcp("some-audience") == oidc_token
 
@@ -461,22 +445,22 @@ def test_detect_gcp_request_fails(monkeypatch):
     monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
 
     resp = pretend.stub(
-        raise_for_status=pretend.raiser(HTTPError),
-        status_code=999,
-        content=b"something",
+        status=999,
+        data=b"something",
     )
-    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp), HTTPError=HTTPError)
-    monkeypatch.setattr(ambient, "requests", requests)
+    u3 = pretend.stub(request=pretend.call_recorder(lambda meth, url, **kw: resp))
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
         match=r"GCP: OIDC token request failed \(code=999, body='something'\)",
     ):
         ambient.detect_gcp("some-audience")
-    assert requests.get.calls == [
+    assert u3.request.calls == [
         pretend.call(
+            "GET",
             ambient._GCP_IDENTITY_REQUEST_URL,
-            params={"audience": "some-audience", "format": "full"},
+            fields={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
             timeout=30,
         )
@@ -492,11 +476,11 @@ def test_detect_gcp_request_timeout(monkeypatch):
 
     resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
     requests = pretend.stub(
-        get=pretend.call_recorder(lambda url, **kw: resp),
+        request=pretend.call_recorder(lambda url, **kw: resp),
         HTTPError=HTTPError,
         Timeout=Timeout,
     )
-    monkeypatch.setattr(ambient, "requests", requests)
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
         ambient.AmbientCredentialError,
@@ -506,7 +490,7 @@ def test_detect_gcp_request_timeout(monkeypatch):
     assert requests.get.calls == [
         pretend.call(
             ambient._GCP_IDENTITY_REQUEST_URL,
-            params={"audience": "some-audience", "format": "full"},
+            fields={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
             timeout=30,
         )
@@ -525,17 +509,18 @@ def test_detect_gcp(monkeypatch, product_name):
     monkeypatch.setattr(ambient, "logger", logger)
 
     resp = pretend.stub(
-        raise_for_status=lambda: None,
-        text="fakejwt",
+        status=200,
+        data=b"fakejwt",
     )
-    requests = pretend.stub(get=pretend.call_recorder(lambda url, **kw: resp))
-    monkeypatch.setattr(ambient, "requests", requests)
+    u3 = pretend.stub(request=pretend.call_recorder(lambda meth, url, **kw: resp))
+    monkeypatch.setattr(ambient, "urllib3", u3)
 
     assert ambient.detect_gcp("some-audience") == "fakejwt"
-    assert requests.get.calls == [
+    assert u3.request.calls == [
         pretend.call(
+            "GET",
             ambient._GCP_IDENTITY_REQUEST_URL,
-            params={"audience": "some-audience", "format": "full"},
+            fields={"audience": "some-audience", "format": "full"},
             headers={"Metadata-Flavor": "Google"},
             timeout=30,
         )

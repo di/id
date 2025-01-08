@@ -138,8 +138,8 @@ def detect_gcp(audience: str) -> str | None:
 
         if resp.status != 200:
             raise AmbientCredentialError(
-                f"GCP: access token request failed (code={resp.status}) "
-                f"body={resp.data.decode()!r}"
+                f"GCP: access token request failed (code={resp.status}, "
+                f"body={resp.data.decode()!r})"
             )
 
         access_token = resp.json().get("access_token")
