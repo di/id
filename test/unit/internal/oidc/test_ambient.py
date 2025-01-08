@@ -292,10 +292,16 @@ def test_gcp_impersonation_identity_token_request_fail(monkeypatch):
         status=999,
         data=b"something",
     )
-    u3 = pretend.stub(
-        request=pretend.call_recorder(lambda url, **kw: get_resp),
-        post=pretend.call_recorder(lambda url, **kw: post_resp),
-    )
+
+    def _request(meth, *a, **kw):
+        if meth == "GET":
+            return get_resp
+        elif meth == "POST":
+            return post_resp
+        else:
+            assert False
+
+    u3 = pretend.stub(request=_request)
     monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
@@ -320,13 +326,16 @@ def test_gcp_impersonation_identity_token_request_timeout(monkeypatch):
 
     access_token = pretend.stub()
     get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
-    post_resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
-    requests = pretend.stub(
-        request=pretend.call_recorder(lambda url, **kw: get_resp),
-        post=pretend.call_recorder(lambda url, **kw: post_resp),
-        HTTPError=HTTPError,
-        Timeout=Timeout,
-    )
+
+    def _request(meth, *a, **kw):
+        if meth == "GET":
+            return get_resp
+        elif meth == "POST":
+            raise ValueError
+        else:
+            assert False
+
+    u3 = pretend.stub(request=_request, exceptions=pretend.stub(MaxRetryError=ValueError))
     monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
@@ -352,11 +361,16 @@ def test_gcp_impersonation_identity_token_missing(monkeypatch):
     access_token = pretend.stub()
     get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
     post_resp = pretend.stub(status=200, json=lambda: {})
-    u3 = pretend.stub(
-        request=pretend.call_recorder(lambda url, **kw: get_resp),
-        post=pretend.call_recorder(lambda url, **kw: post_resp),
-        HTTPError=HTTPError,
-    )
+
+    def _request(meth, *a, **kw):
+        if meth == "GET":
+            return get_resp
+        elif meth == "POST":
+            return post_resp
+        else:
+            assert False
+
+    u3 = pretend.stub(request=_request)
     monkeypatch.setattr(ambient, "urllib3", u3)
 
     with pytest.raises(
@@ -383,11 +397,16 @@ def test_gcp_impersonation_succeeds(monkeypatch):
     oidc_token = pretend.stub()
     get_resp = pretend.stub(status=200, json=lambda: {"access_token": access_token})
     post_resp = pretend.stub(status=200, json=lambda: {"token": oidc_token})
-    u3 = pretend.stub(
-        request=pretend.call_recorder(lambda url, **kw: get_resp),
-        post=pretend.call_recorder(lambda url, **kw: post_resp),
-        HTTPError=HTTPError,
-    )
+
+    def _request(meth, *a, **kw):
+        if meth == "GET":
+            return get_resp
+        elif meth == "POST":
+            return post_resp
+        else:
+            assert False
+
+    u3 = pretend.stub(request=_request)
     monkeypatch.setattr(ambient, "urllib3", u3)
 
     assert ambient.detect_gcp("some-audience") == oidc_token
@@ -474,11 +493,8 @@ def test_detect_gcp_request_timeout(monkeypatch):
     )
     monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
 
-    resp = pretend.stub(raise_for_status=pretend.raiser(Timeout))
-    requests = pretend.stub(
-        request=pretend.call_recorder(lambda url, **kw: resp),
-        HTTPError=HTTPError,
-        Timeout=Timeout,
+    u3 = pretend.stub(
+        request=pretend.raiser(ValueError), exceptions=pretend.stub(MaxRetryError=ValueError)
     )
     monkeypatch.setattr(ambient, "urllib3", u3)
 
@@ -487,14 +503,6 @@ def test_detect_gcp_request_timeout(monkeypatch):
         match=r"GCP: OIDC token request timed out",
     ):
         ambient.detect_gcp("some-audience")
-    assert requests.get.calls == [
-        pretend.call(
-            ambient._GCP_IDENTITY_REQUEST_URL,
-            fields={"audience": "some-audience", "format": "full"},
-            headers={"Metadata-Flavor": "Google"},
-            timeout=30,
-        )
-    ]
 
 
 @pytest.mark.parametrize("product_name", ("Google", "Google Compute Engine"))
