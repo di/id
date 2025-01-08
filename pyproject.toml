@@ -23,7 +23,7 @@ classifiers = [
   "Topic :: Security",
   "Topic :: Security :: Cryptography",
 ]
-dependencies = ["urllib3 ~= 2.3"]
+dependencies = ["urllib3 >= 2, < 3"]
 requires-python = ">=3.8"
 
 [project.urls]
