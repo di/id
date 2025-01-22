@@ -45,6 +45,11 @@ _GCP_GENERATEIDTOKEN_REQUEST_URL = (
 _env_var_regex = re.compile(r"[^A-Z0-9_]|^[^A-Z_]")
 
 
+# Wrap `open` for testing purposes
+def _open(filename):
+    return open(filename)
+
+
 def detect_github(audience: str) -> str | None:
     """
     Detect and return a GitHub Actions ambient OIDC credential.
@@ -175,7 +180,7 @@ def detect_gcp(audience: str) -> str | None:
         logger.debug("GCP: GOOGLE_SERVICE_ACCOUNT_NAME not set; skipping impersonation")
 
         try:
-            with open(_GCP_PRODUCT_NAME_FILE) as f:
+            with _open(_GCP_PRODUCT_NAME_FILE) as f:
                 name = f.read().strip()
         except OSError:
             logger.debug("GCP: environment doesn't have GCP product name file; giving up")
