@@ -24,6 +24,7 @@ import os
 import re
 import shutil
 import subprocess  # nosec B404
+from typing import TextIO
 
 import requests
 
@@ -46,7 +47,7 @@ _env_var_regex = re.compile(r"[^A-Z0-9_]|^[^A-Z_]")
 
 
 # Wrap `open` for testing purposes
-def _open(filename):
+def _open(filename: str) -> TextIO:
     return open(filename)
 
 
