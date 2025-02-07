@@ -22,6 +22,7 @@ jobs:
           - { py: "3.11", os: "ubuntu-latest" }
           - { py: "3.12", os: "ubuntu-latest" }
           - { py: "3.13", os: "ubuntu-latest" }
+          - { py: "pypy3.10", os: "ubuntu-latest" }
           # NOTE: We only test Windows and macOS on the latest Python;
           # these primarily exist to ensure that we don't accidentally
           # introduce Linux-isms into the development tooling.
@@ -33,7 +34,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: ${{ matrix.conf.py }}
           cache: "pip"

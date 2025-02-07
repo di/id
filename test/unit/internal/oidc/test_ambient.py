@@ -422,7 +422,7 @@ def test_gcp_impersonation_succeeds(monkeypatch):
 
 def test_gcp_bad_env(monkeypatch):
     oserror = pretend.raiser(OSError)
-    monkeypatch.setitem(ambient.__builtins__, "open", oserror)  # type: ignore
+    monkeypatch.setattr(ambient, "_open", oserror)  # type: ignore
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -440,7 +440,7 @@ def test_gcp_wrong_product(monkeypatch):
         __enter__=lambda *a: pretend.stub(read=lambda: "Unsupported Product"),
         __exit__=lambda *a: None,
     )
-    monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
+    monkeypatch.setattr(ambient, "_open", lambda fn: stub_file)  # type: ignore
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -461,7 +461,7 @@ def test_detect_gcp_request_fails(monkeypatch):
         __enter__=lambda *a: pretend.stub(read=lambda: "Google"),
         __exit__=lambda *a: None,
     )
-    monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
+    monkeypatch.setattr(ambient, "_open", lambda fn: stub_file)  # type: ignore
 
     resp = pretend.stub(
         status=999,
@@ -491,7 +491,7 @@ def test_detect_gcp_request_timeout(monkeypatch):
         __enter__=lambda *a: pretend.stub(read=lambda: "Google"),
         __exit__=lambda *a: None,
     )
-    monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
+    monkeypatch.setattr(ambient, "_open", lambda fn: stub_file)  # type: ignore
 
     u3 = pretend.stub(
         request=pretend.raiser(ValueError), exceptions=pretend.stub(MaxRetryError=ValueError)
@@ -511,7 +511,7 @@ def test_detect_gcp(monkeypatch, product_name):
         __enter__=lambda *a: pretend.stub(read=lambda: product_name),
         __exit__=lambda *a: None,
     )
-    monkeypatch.setitem(ambient.__builtins__, "open", lambda fn: stub_file)  # type: ignore
+    monkeypatch.setattr(ambient, "_open", lambda fn: stub_file)  # type: ignore
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
