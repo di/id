@@ -97,8 +97,7 @@ def detect_github(audience: str) -> str | None:
 
     if resp.status != 200:
         raise AmbientCredentialError(
-            f"GitHub: OIDC token request failed (code={resp.status}, "
-            f"body={resp.data.decode()!r})"
+            f"GitHub: OIDC token request failed (code={resp.status}, body={resp.data.decode()!r})"
         )
 
     try:
@@ -170,8 +169,7 @@ def detect_gcp(audience: str) -> str | None:
 
         if resp.status != 200:
             raise AmbientCredentialError(
-                f"GCP: OIDC token request failed (code={resp.status}, "
-                f"body={resp.data.decode()!r})"
+                f"GCP: OIDC token request failed (code={resp.status}, body={resp.data.decode()!r})"
             )
 
         oidc_token: str = resp.json().get("token")
@@ -211,8 +209,7 @@ def detect_gcp(audience: str) -> str | None:
 
         if resp.status != 200:
             raise AmbientCredentialError(
-                f"GCP: OIDC token request failed (code={resp.status}, "
-                f"body={resp.data.decode()!r})"
+                f"GCP: OIDC token request failed (code={resp.status}, body={resp.data.decode()!r})"
             )
 
         logger.debug("GCP: successfully requested OIDC token")
