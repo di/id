@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+* Drop dependency on `requests` in favor of underlying
+  `urllib3` ([#333](https://github.com/di/id/pull/333))
+
 ## [1.5.0]
 
 ### Changed
