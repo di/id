@@ -69,7 +69,7 @@ jobs:
       id-token: write # To upload via OIDC + generate attestations.
     steps:
       - name: Download artifacts directories # goes to current working directory
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
 
       - name: publish
         uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # v1.12.4
@@ -85,7 +85,7 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts directories # goes to current working directory
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
 
       - name: Upload artifacts to GitHub
         # Confusingly, this action also supports updating releases, not
