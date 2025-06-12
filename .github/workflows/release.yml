@@ -91,7 +91,7 @@ jobs:
         # Confusingly, this action also supports updating releases, not
         # just creating them. This is what we want here, since we've manually
         # created the release that triggered the action.
-        uses: softprops/action-gh-release@d5382d3e6f2fa7bd53cb749d33091853d4985daf # v2.3.0
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           files: |
             built-packages/*
