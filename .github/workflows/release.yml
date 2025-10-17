@@ -5,7 +5,7 @@ on:
     types:
       - published
 
-permissions:  # added using https://github.com/step-security/secure-workflows
+permissions: # added using https://github.com/step-security/secure-workflows
   contents: read
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
     needs: [build]
     name: Generate build provenance
     permissions:
-      actions: read   # To read the workflow path.
+      actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
     # Currently this action needs to be referred by tag. More details at:

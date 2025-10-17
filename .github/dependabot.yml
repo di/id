@@ -4,12 +4,20 @@ updates:
   - package-ecosystem: pip
     directory: /
     schedule:
-      interval: daily
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      pip:
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
+      interval: monthly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 99
     rebase-strategy: "disabled"
     groups:
