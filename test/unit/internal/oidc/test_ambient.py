@@ -706,7 +706,8 @@ def test_circleci_no_circleci_cli(monkeypatch):
     assert shutil.which.calls == [pretend.call("circleci")]
 
 
-def test_circleci_circlecli_error(monkeypatch):
+@pytest.mark.parametrize("root_issuer", [True, False])
+def test_circleci_circlecli_error(monkeypatch, root_issuer):
     monkeypatch.setenv("CIRCLECI", "true")
 
     # Mock out the `which` call to show that we have a `circleci` in our `PATH`.
@@ -720,25 +721,30 @@ def test_circleci_circlecli_error(monkeypatch):
     )
     subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
     monkeypatch.setattr(ambient, "subprocess", subprocess)
+
     payload = json.dumps({"aud": "some-audience"})
+    expected_cmd = ["circleci", "run", "oidc", "get", "--claims", payload]
+    if root_issuer:
+        expected_cmd.append("--root-issuer")
 
     with pytest.raises(
         ambient.AmbientCredentialError,
         match=r"CircleCI: the `circleci` tool encountered an error: mock error message",
     ):
-        ambient.detect_circleci("some-audience")
+        ambient.detect_circleci("some-audience", root_issuer)
 
     assert shutil.which.calls == [pretend.call("circleci")]
     assert subprocess.run.calls == [
         pretend.call(
-            ["circleci", "run", "oidc", "get", "--claims", payload],
+            expected_cmd,
             capture_output=True,
             text=True,
         )
     ]
 
 
-def test_circleci(monkeypatch):
+@pytest.mark.parametrize("root_issuer", [True, False])
+def test_circleci(monkeypatch, root_issuer):
     monkeypatch.setenv("CIRCLECI", "true")
 
     # Mock out the `which` call to show that we have a `circleci` in our `PATH`.
@@ -752,13 +758,17 @@ def test_circleci(monkeypatch):
     )
     subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
     monkeypatch.setattr(ambient, "subprocess", subprocess)
-    payload = json.dumps({"aud": "some-audience"})
 
-    assert ambient.detect_circleci("some-audience") == "fakejwt"
+    payload = json.dumps({"aud": "some-audience"})
+    expected_cmd = ["circleci", "run", "oidc", "get", "--claims", payload]
+    if root_issuer:
+        expected_cmd.append("--root-issuer")
+
+    assert ambient.detect_circleci("some-audience", root_issuer) == "fakejwt"
     assert shutil.which.calls == [pretend.call("circleci")]
     assert subprocess.run.calls == [
         pretend.call(
-            ["circleci", "run", "oidc", "get", "--claims", payload],
+            expected_cmd,
             capture_output=True,
             text=True,
         )

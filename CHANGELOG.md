@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+* CircleCI: default to --root-issuer when generating OIDC Token ([[#438](https://github.com/di/id/pull/438)])
+
 * Drop dependency on `requests` in favor of underlying
   `urllib3` ([#333](https://github.com/di/id/pull/333))
 
