@@ -19,16 +19,17 @@ jobs:
           command: |
             python -m pip install . --user
       - run:
-          name: sniff for a fork force
+          name: sniff for a fork
           command: |
-            env | sort
+            [ -z "$CIRCLE_OIDC_TOKEN" ] && echo "This is a fork, exit here with message?"
+
       - run:
           name: Generate throwaway credential
           command: |
             # Flush to /dev/null as a conservative measure: this token
             # shouldn't be sensitive or used by anything, but there's
             # also no reason to leak it by default.
-            python -m id throwaway
+            python -m id throwaway > /dev/null
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
