@@ -335,7 +335,7 @@ def detect_circleci(audience: str, root_issuer: bool = True) -> str | None:
 
     if process.returncode != 0:
         raise AmbientCredentialError(
-            f"CircleCI: the `circleci` tool encountered an error: {process.stdout}"
+            f"CircleCI: the `circleci` tool encountered an error: {process.stderr}"
         )
 
     return process.stdout.strip()
