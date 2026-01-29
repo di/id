@@ -717,7 +717,7 @@ def test_circleci_circlecli_error(monkeypatch, root_issuer):
     # Mock out `run` call to emulate getting a non-zero return code from the `circleci`.
     resp = pretend.stub(
         returncode=-1,
-        stdout="mock error message",
+        stderr="mock error message",
     )
     subprocess = pretend.stub(run=pretend.call_recorder(lambda run_args, **kw: resp), PIPE=None)
     monkeypatch.setattr(ambient, "subprocess", subprocess)
