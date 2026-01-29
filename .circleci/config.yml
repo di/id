@@ -19,7 +19,7 @@ jobs:
           command: |
             python -m pip install . --user
       - run:
-          name: sniff for a fork
+          name: sniff for a fork force
           command: |
             env | sort
       - run:
