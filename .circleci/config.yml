@@ -19,12 +19,16 @@ jobs:
           command: |
             python -m pip install . --user
       - run:
+          name: sniff for a fork
+          command: |
+            env | sort
+      - run:
           name: Generate throwaway credential
           command: |
             # Flush to /dev/null as a conservative measure: this token
             # shouldn't be sensitive or used by anything, but there's
             # also no reason to leak it by default.
-            python -m id throwaway > /dev/null
+            python -m id throwaway
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
