@@ -21,7 +21,7 @@ from __future__ import annotations
 import base64
 from typing import Callable
 
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 
 class IdentityError(Exception):
