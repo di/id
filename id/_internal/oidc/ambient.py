@@ -24,7 +24,8 @@ import os
 import re
 import shutil
 import subprocess  # nosec B404
-from typing import TextIO
+from typing import Any, TextIO
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import urllib3
 
@@ -44,6 +45,27 @@ _GCP_GENERATEIDTOKEN_REQUEST_URL = (
 )
 
 _env_var_regex = re.compile(r"[^A-Z0-9_]|^[^A-Z_]")
+
+
+def _request(
+    method: str,
+    url: str,
+    *,
+    fields: dict[str, str] | None = None,
+    **kwargs: Any,
+) -> urllib3.BaseHTTPResponse:
+    """request wrapper that handles adding query parameters to URLs that may already have them"""
+    _encode_url_methods = {"DELETE", "GET", "HEAD", "OPTIONS"}
+    if method.upper() in _encode_url_methods and fields:
+        url_parts = list(urlparse(url))
+        query = dict(parse_qsl(url_parts[4]))
+        query.update(fields)
+        url_parts[4] = urlencode(query)
+
+        url = urlunparse(url_parts)
+        fields = None
+
+    return urllib3.request(method, url, fields=fields, **kwargs)
 
 
 # Wrap `open` for testing purposes
@@ -85,7 +107,7 @@ def detect_github(audience: str) -> str | None:
     logger.debug("GitHub: requesting OIDC token")
 
     try:
-        resp = urllib3.request(
+        resp = _request(
             "GET",
             req_url,
             fields={"audience": audience},
@@ -131,7 +153,7 @@ def detect_gcp(audience: str) -> str | None:
         logger.debug("GCP: requesting access token")
 
         try:
-            resp = urllib3.request(
+            resp = _request(
                 "GET",
                 _GCP_TOKEN_REQUEST_URL,
                 fields={"scopes": "https://www.googleapis.com/auth/cloud-platform"},
@@ -155,7 +177,7 @@ def detect_gcp(audience: str) -> str | None:
         logger.debug("GCP: requesting OIDC token")
 
         try:
-            resp = urllib3.request(
+            resp = _request(
                 "POST",
                 _GCP_GENERATEIDTOKEN_REQUEST_URL.format(service_account_name),
                 json={"audience": audience, "includeEmail": True},
@@ -197,7 +219,7 @@ def detect_gcp(audience: str) -> str | None:
         logger.debug("GCP: requesting OIDC token")
 
         try:
-            resp = urllib3.request(
+            resp = _request(
                 "GET",
                 _GCP_IDENTITY_REQUEST_URL,
                 fields={"audience": audience, "format": "full"},
