@@ -13,12 +13,21 @@
 # limitations under the License.
 
 import json
+from pathlib import Path
 
 import pretend
 import pytest
 
 from id import detect_credential
 from id._internal.oidc import ambient
+
+HERE = Path(__file__).parent
+
+
+# example from Github Actions (audience of the token is "sigstore")
+_GHA_TOKEN = (HERE / "gha_token.txt").read_text().strip()
+# request URL example from Github Actions: note the query params already in the URL
+_GHA_TOKEN_REQUEST_URL = "https://run-actions-3-azure-eastus.actions.githubusercontent.com/64//idtoken/918f5315-f823-4b74-ae16-8fc423e48661/0b77e920-7dce-5419-aca2-996d3c2116b7?api-version=2.0"
 
 
 def test_detect_credential_none(monkeypatch):
@@ -30,10 +39,32 @@ def test_detect_credential_none(monkeypatch):
 
 
 def test_detect_credential(monkeypatch):
-    detect_github = pretend.call_recorder(lambda audience: "fakejwt")
+    detect_github = pretend.call_recorder(lambda audience: _GHA_TOKEN)
     monkeypatch.setattr(ambient, "detect_github", detect_github)
 
-    assert detect_credential("some-audience") == "fakejwt"
+    assert detect_credential("sigstore") == _GHA_TOKEN
+
+
+def test_detect_credential_audience_mismatch(monkeypatch):
+    detect_github = pretend.call_recorder(lambda audience: _GHA_TOKEN)
+    monkeypatch.setattr(ambient, "detect_github", detect_github)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match=r"Token audience claim mismatch \(expected my-audience, got sigstore\)",
+    ):
+        detect_credential("my-audience")
+
+
+def test_detect_credential_malformed_token(monkeypatch):
+    detect_github = pretend.call_recorder(lambda audience: "header.payload.sig")
+    monkeypatch.setattr(ambient, "detect_github", detect_github)
+
+    with pytest.raises(
+        ambient.AmbientCredentialError,
+        match="Malformed token",
+    ):
+        detect_credential("my-audience")
 
 
 def test_detect_github_bad_env(monkeypatch):
@@ -53,7 +84,7 @@ def test_detect_github_bad_env(monkeypatch):
 def test_detect_github_bad_request_token(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.delenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", raising=False)
-    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", _GHA_TOKEN_REQUEST_URL)
 
     logger = pretend.stub(debug=pretend.call_recorder(lambda s: None))
     monkeypatch.setattr(ambient, "logger", logger)
@@ -89,7 +120,7 @@ def test_detect_github_bad_request_url(monkeypatch):
 def test_detect_github_request_fails(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
-    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", _GHA_TOKEN_REQUEST_URL)
 
     resp = pretend.stub(
         status=999,
@@ -106,8 +137,8 @@ def test_detect_github_request_fails(monkeypatch):
     assert u3.request.calls == [
         pretend.call(
             "GET",
-            "fakeurl",
-            fields={"audience": "some-audience"},
+            f"{_GHA_TOKEN_REQUEST_URL}&audience=some-audience",
+            fields=None,
             headers={"Authorization": "bearer faketoken"},
             timeout=30,
         )
@@ -117,7 +148,7 @@ def test_detect_github_request_fails(monkeypatch):
 def test_detect_github_request_timeout(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
-    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", _GHA_TOKEN_REQUEST_URL)
 
     u3 = pretend.stub(
         request=pretend.raiser(ValueError), exceptions=pretend.stub(MaxRetryError=ValueError)
@@ -135,7 +166,7 @@ def test_detect_github_request_timeout(monkeypatch):
 def test_detect_github_invalid_json_payload(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
-    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", _GHA_TOKEN_REQUEST_URL)
 
     resp = pretend.stub(status=200, json=pretend.raiser(json.JSONDecodeError))
     request = pretend.call_recorder(lambda meth, url, **kw: resp)
@@ -149,8 +180,8 @@ def test_detect_github_invalid_json_payload(monkeypatch):
     assert request.calls == [
         pretend.call(
             "GET",
-            "fakeurl",
-            fields={"audience": "some-audience"},
+            f"{_GHA_TOKEN_REQUEST_URL}&audience=some-audience",
+            fields=None,
             headers={"Authorization": "bearer faketoken"},
             timeout=30,
         )
@@ -161,7 +192,7 @@ def test_detect_github_invalid_json_payload(monkeypatch):
 def test_detect_github_bad_payload(monkeypatch, payload):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
-    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", _GHA_TOKEN_REQUEST_URL)
 
     resp = pretend.stub(status=200, json=pretend.call_recorder(lambda: payload))
     u3 = pretend.stub(request=pretend.call_recorder(lambda meth, url, **kw: resp))
@@ -175,8 +206,8 @@ def test_detect_github_bad_payload(monkeypatch, payload):
     assert u3.request.calls == [
         pretend.call(
             "GET",
-            "fakeurl",
-            fields={"audience": "some-audience"},
+            f"{_GHA_TOKEN_REQUEST_URL}&audience=some-audience",
+            fields=None,
             headers={"Authorization": "bearer faketoken"},
             timeout=30,
         )
@@ -187,7 +218,7 @@ def test_detect_github_bad_payload(monkeypatch, payload):
 def test_detect_github(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "faketoken")
-    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", "fakeurl")
+    monkeypatch.setenv("ACTIONS_ID_TOKEN_REQUEST_URL", _GHA_TOKEN_REQUEST_URL)
 
     resp = pretend.stub(
         status=200,
@@ -200,8 +231,8 @@ def test_detect_github(monkeypatch):
     assert u3.request.calls == [
         pretend.call(
             "GET",
-            "fakeurl",
-            fields={"audience": "some-audience"},
+            f"{_GHA_TOKEN_REQUEST_URL}&audience=some-audience",
+            fields=None,
             headers={"Authorization": "bearer faketoken"},
             timeout=30,
         )
@@ -478,8 +509,8 @@ def test_detect_gcp_request_fails(monkeypatch):
     assert u3.request.calls == [
         pretend.call(
             "GET",
-            ambient._GCP_IDENTITY_REQUEST_URL,
-            fields={"audience": "some-audience", "format": "full"},
+            f"{ambient._GCP_IDENTITY_REQUEST_URL}?audience=some-audience&format=full",
+            fields=None,
             headers={"Metadata-Flavor": "Google"},
             timeout=30,
         )
@@ -527,8 +558,8 @@ def test_detect_gcp(monkeypatch, product_name):
     assert u3.request.calls == [
         pretend.call(
             "GET",
-            ambient._GCP_IDENTITY_REQUEST_URL,
-            fields={"audience": "some-audience", "format": "full"},
+            f"{ambient._GCP_IDENTITY_REQUEST_URL}?audience=some-audience&format=full",
+            fields=None,
             headers={"Metadata-Flavor": "Google"},
             timeout=30,
         )

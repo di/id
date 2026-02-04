@@ -19,6 +19,8 @@ API for retrieving OIDC tokens.
 from __future__ import annotations
 
 import base64
+import binascii
+import json
 from typing import Callable
 
 __version__ = "1.6.0"
@@ -50,6 +52,26 @@ class GitHubOidcPermissionCredentialError(AmbientCredentialError):
     pass
 
 
+def _validate_credential(credential: str, audience: str) -> None:
+    # Decode credential to verify it roughly looks like a token and contains
+    # the correct audience
+    try:
+        _, payload, _ = credential.split(".")
+        decoded_payload = base64.urlsafe_b64decode(payload + "==").decode("utf-8")
+        payload_json = json.loads(decoded_payload)
+    except (ValueError, binascii.Error, json.decoder.JSONDecodeError) as e:
+        raise AmbientCredentialError("Malformed token") from e
+
+    if not isinstance(payload_json, dict):
+        raise AmbientCredentialError("Malformed token payload (JWT is not a JSON object)")
+    if "aud" not in payload_json:
+        raise AmbientCredentialError("Malformed token payload (audience claim is missing)")
+    if payload_json["aud"] != audience:
+        raise AmbientCredentialError(
+            f"Token audience claim mismatch (expected {audience}, got {payload_json['aud']})"
+        )
+
+
 def detect_credential(audience: str) -> str | None:
     """
     Try each ambient credential detector, returning the first one to succeed
@@ -76,6 +98,7 @@ def detect_credential(audience: str) -> str | None:
     for detector in detectors:
         credential = detector(audience)
         if credential is not None:
+            _validate_credential(credential, audience)
             return credential
     return None
 

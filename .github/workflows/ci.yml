@@ -7,14 +7,12 @@ on:
   pull_request:
   schedule:
     - cron: "0 12 * * *"
+  workflow_dispatch:
 
 permissions: {}
 
 jobs:
-  test:
-    permissions:
-      # Needed to access the workflow's OIDC identity.
-      id-token: write
+  unit-test:
     strategy:
       matrix:
         conf:
@@ -48,11 +46,37 @@ jobs:
       - name: test
         run: make test TEST_ARGS="-vv --showlocals"
 
+  github-actions-test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # for OIDC
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        with:
+          python-version: "3.x"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: deps
+        run: pip install .
+
+      - name: Test id with GitHub Actions OIDC
+        shell: python
+        run: |
+          import id
+          assert id.detect_credential("my-audience")
+
   all-tests-pass:
     if: always()
 
     needs:
-      - test
+      - unit-test
+      - github-actions-test
 
     runs-on: ubuntu-latest
 
@@ -61,3 +85,4 @@ jobs:
         uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           jobs: ${{ toJSON(needs) }}
+          allowed-skips: github-actions-test
