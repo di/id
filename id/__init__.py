@@ -21,7 +21,7 @@ from __future__ import annotations
 import base64
 import binascii
 import json
-from typing import Callable
+from collections.abc import Callable
 
 __version__ = "1.6.1"
 
